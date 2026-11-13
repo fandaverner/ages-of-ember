@@ -16,7 +16,7 @@ import struct
 png = open('www/img/ikona.png', 'rb').read()
 open('ikona.ico', 'wb').write(struct.pack('<HHH', 0, 1, 1) + struct.pack('<BBBBHHII', 0, 0, 0, 0, 1, 32, len(png), 22) + png)
 PY
-node -e "(r => (r.rcedit || r.default || r))(require('rcedit'))('bin/neutralino-win_x64.exe', { icon: 'ikona.ico', 'file-version': '1.0.0', 'product-version': '1.0.0', 'version-string': { FileDescription: 'Ages of Ember', ProductName: 'Ages of Ember' } }).then(() => console.log('ikona ok'))"
+node -e "(r => (r.rcedit || r.default || r))(require('rcedit'))('bin/neutralino-win_x64.exe', { icon: 'ikona.ico', 'file-version': '1.1.0', 'product-version': '1.1.0', 'version-string': { FileDescription: 'Ages of Ember', ProductName: 'Ages of Ember' } }).then(() => console.log('ikona ok'))"
 rm -rf dist
 npx neu build --release --embed-resources
 # nechat jen verzi pro Windows: dist/AgesOfEmber.exe
