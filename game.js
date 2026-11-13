@@ -1557,13 +1557,23 @@ function updTrader(dt) {
 /* ---------- kreslení ---------- */
 /* textury země: plynulé přechody mezi povrchy, písek na březích */
 const TEX = {};
-let terrMode = 'kresba', terrDirty = false;
+let terrMode = 'kresba', terrDirty = false, texReady = false;
+const SET_KEY = 'agesOfEmber_nastaveni';
+const SET = (() => { try { return Object.assign({ terr: 'krasna', autosave: 60 }, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) { return { terr: 'krasna', autosave: 60 }; } })();
+function saveSet() { try { localStorage.setItem(SET_KEY, JSON.stringify(SET)); } catch (e) { } }
+function applyTerrain() {   // přepne malovaný / jednoduchý terén za běhu
+  terrMode = (SET.terr === 'krasna' && texReady) ? 'textury' : 'kresba';
+  if (!S) return;
+  tctx.clearRect(0, 0, tcan.width, tcan.height);
+  if (terrMode === 'textury') terrDirty = true;
+  else { for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (rev[x + y * N]) drawTile(x, y); S.roads.forEach(k => roadTile(tctx, k % N, Math.floor(k / N))); }
+}
 (function loadTex() {
   const names = ['zem_trava1', 'zem_trava2', 'zem_hlina1', 'zem_hlina2', 'zem_skala1', 'zem_skala2', 'zem_pisek1', 'zem_voda1'];
   let left = names.length, bad = false;
   names.forEach(n => {
     const i = new Image();
-    i.onload = () => { TEX[n] = i; if (--left === 0 && !bad) { terrMode = 'textury'; terrDirty = true; } };
+    i.onload = () => { TEX[n] = i; if (--left === 0 && !bad) { texReady = true; if (SET.terr === 'krasna') { terrMode = 'textury'; terrDirty = true; } } };
     i.onerror = () => { bad = true; --left; };
     i.src = 'img/' + n + '.png';
   });
@@ -3015,6 +3025,7 @@ function showModal(kind) {
       <div class="row"><div class="d"><b>Záloha do souboru</b><br><small>Stáhne uloženou hru jako soubor. Hodí se před mazáním dat prohlížeče.</small></div><button data-a="export">⬇ Export</button></div>
       <div class="row"><div class="d"><b>Načíst ze souboru</b><br><small>Nahradí rozehranou hru zálohou.</small></div><button data-a="import">⬆ Import</button></div>
       <div class="row"><div class="d"><b>Nová hra</b><br><small>Smaže rozehranou hru a začne znovu.</small></div><button data-a="new">Nová hra</button></div>
+      <div class="row"><div class="d"><b>Hlavní menu</b><br><small>Uloží hru a vrátí se na úvodní obrazovku.</small></div><button data-a="title">🏠 Menu</button></div>
       <div class="hint">Ovládání: levé tlačítko označuje lidi a stavby, pravé posílá označené lidi pracovat. Mapu posouváte tažením pravým tlačítkem nebo klávesami WASD/šipkami, kolečkem přibližujete. Tečka najde nečinného člověka, mezerník pozastaví hru, Esc ruší výběr a stavění.</div>
       <div style="text-align:right;margin-top:8px"><button data-a="close">Zpět do hry</button></div>`;
   } else if (kind === 'confirmNew') {
@@ -3166,6 +3177,56 @@ function act(a, v) {
   renderUI();
 }
 
+/* ---------- úvodní obrazovka ---------- */
+let titleOn = false;
+const hasSave = () => { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } };
+function showTitle() {
+  titleOn = true; closeModal(); tPanel(null);
+  $('tCont').classList.toggle('off', !hasSave());
+  $('title').style.display = 'block';
+}
+function hideTitle() { titleOn = false; tPanel(null); $('title').style.display = 'none'; last = performance.now(); renderUI(); }
+function tPanel(kind) {
+  const el = $('tpanel');
+  if (!kind) { el.style.display = 'none'; return; }
+  let h = '';
+  if (kind === 'confirm') {
+    h = `<h3>Nová hra</h3><div>Rozehraná hra se smaže a začnete znovu v jeskyni. Jestli si ji chcete schovat, dejte nejdřív ve hře ☰ Hra → Export.</div>
+      <div style="text-align:right;margin-top:10px"><button data-a="t_newYes">Ano, nová hra</button> <button data-a="t_back">Zpět</button></div>`;
+  } else if (kind === 'set') {
+    const opt = (a, v, t, cur) => `<button data-a="${a}" data-v="${v}" class="${cur ? 'on' : ''}">${t}</button>`;
+    h = `<h3>Nastavení</h3>
+      <div class="row"><div class="d"><b>Vzhled krajiny</b><br><small>Jednoduchá kresba je rychlejší na slabších počítačích.</small></div><div>${opt('t_terr', 'krasna', 'Malovaná', SET.terr === 'krasna')} ${opt('t_terr', 'jednoducha', 'Jednoduchá', SET.terr !== 'krasna')}</div></div>
+      <div class="row"><div class="d"><b>Automatické ukládání</b><br><small>Hra se ukládá do prohlížeče i při zavření okna.</small></div><div>${opt('t_auto', 60, '1 min', SET.autosave === 60)} ${opt('t_auto', 300, '5 min', SET.autosave === 300)} ${opt('t_auto', 0, 'Vyp.', !SET.autosave)}</div></div>
+      <div class="row"><div class="d"><b>Smazat uloženou hru</b><br><small>Vymaže rozehranou hru z tohoto prohlížeče.</small></div><button data-a="t_del" class="${hasSave() ? '' : 'off'}">Smazat</button></div>
+      <div style="text-align:right;margin-top:8px"><button data-a="t_back">Zpět</button></div>`;
+  } else if (kind === 'del') {
+    h = `<h3>Smazat uloženou hru?</h3><div>Rozehraná hra zmizí z tohoto prohlížeče a nepůjde vrátit (jen ze zálohy v souboru).</div>
+      <div style="text-align:right;margin-top:10px"><button data-a="t_delYes">Ano, smazat</button> <button data-a="t_set">Ne</button></div>`;
+  } else if (kind === 'quit') {
+    h = `<h3>Na shledanou!</h3><div>${hasSave() ? 'Hra je uložená. ' : ''}Teď můžete zavřít záložku prohlížeče. Až se vrátíte, dejte <b>Pokračovat</b>.</div>
+      <div style="text-align:right;margin-top:10px"><button data-a="t_back">Zpět do menu</button></div>`;
+  }
+  el.innerHTML = h; el.style.display = 'block';
+}
+function titleAct(a, v) {
+  switch (a) {
+    case 't_new': if (hasSave() && S && S.people.length) tPanel('confirm'); else titleAct('t_newYes'); return true;
+    case 't_newYes': newState(); saveGame(); hideTitle(); showModal('intro'); return true;
+    case 't_cont': if (hasSave()) hideTitle(); return true;
+    case 't_load': $('file').click(); return true;
+    case 't_set': tPanel('set'); return true;
+    case 't_terr': SET.terr = v; saveSet(); applyTerrain(); tPanel('set'); return true;
+    case 't_auto': SET.autosave = +v; saveSet(); tPanel('set'); return true;
+    case 't_del': tPanel('del'); return true;
+    case 't_delYes': try { localStorage.removeItem(SAVE_KEY); } catch (e) { } newState(); showTitle(); toast('Uložená hra smazána.'); return true;
+    case 't_quit': if (S && S.people.length && hasSave()) saveGame(); tPanel('quit'); try { window.close(); } catch (e) { } return true;
+    case 't_back': tPanel(null); $('tCont').classList.toggle('off', !hasSave()); return true;
+    case 'title': if (S && S.people.length) saveGame(); showTitle(); return true;
+  }
+  return false;
+}
+
 /* ---------- ukládání ---------- */
 function serialize() {
   let s = ''; for (let i = 0; i < N * N; i++) s += rev[i] ? '1' : '0';
@@ -3187,7 +3248,7 @@ function exportGame() {
 $('file').addEventListener('change', e => {
   const f = e.target.files[0]; if (!f) return;
   const r = new FileReader();
-  r.onload = () => { try { loadFrom(r.result); saveGame(); toast('Hra načtena ze souboru.'); } catch (err) { toast('Tento soubor není uložená hra.'); } };
+  r.onload = () => { try { loadFrom(r.result); saveGame(); if (titleOn) hideTitle(); toast('Hra načtena ze souboru.'); } catch (err) { toast('Tento soubor není uložená hra.'); } };
   r.readAsText(f); e.target.value = '';
 });
 
@@ -3195,7 +3256,7 @@ $('file').addEventListener('change', e => {
 document.addEventListener('mousedown', e => {
   const b = e.target.closest('[data-a]');
   if (!b || b.classList.contains('off')) return;
-  e.preventDefault(); act(b.dataset.a, b.dataset.v);
+  e.preventDefault(); if (titleAct(b.dataset.a, b.dataset.v)) return; act(b.dataset.a, b.dataset.v);
 });
 let selP = new Set(), box = null, ping = null, idleIdx = -1;
 cv.addEventListener('mousedown', e => {
@@ -3328,12 +3389,13 @@ function command(sx, sy) {
 }
 function resize() { cv.width = lcan.width = window.innerWidth; cv.height = lcan.height = window.innerHeight; }
 window.addEventListener('resize', () => { resize(); if (S) renderUI(); });
-window.addEventListener('beforeunload', () => { if (S && S.people.length) saveGame(); });
+window.addEventListener('beforeunload', () => { if (S && S.people.length && !titleOn) saveGame(); });
 
 /* ---------- smyčka ---------- */
 let last = performance.now(), uiT = 0, saveT = 0;
 function frame(now) {
   const real = Math.min(0.1, (now - last) / 1000); last = now;
+  if (titleOn) { requestAnimationFrame(frame); return; }
   const ps = 520 * real / cam.z;
   if (keys.a || keys.arrowleft) cam.x -= ps; if (keys.d || keys.arrowright) cam.x += ps;
   if (keys.w || keys.arrowup) cam.y -= ps; if (keys.s || keys.arrowdown) cam.y += ps;
@@ -3342,7 +3404,7 @@ function frame(now) {
   if (!blocked && S.people.length) for (let i = 0; i < S.speed; i++) update(real);
   render(now / 1000);
   uiT += real; if (uiT > 0.4) { uiT = 0; renderUI(); }
-  saveT += real; if (saveT > 60) { saveT = 0; if (S.people.length) saveGame(); }
+  saveT += real; if (SET.autosave && saveT > SET.autosave) { saveT = 0; if (S.people.length) saveGame(); }
   requestAnimationFrame(frame);
 }
 
@@ -3350,7 +3412,8 @@ resize();
 (function start() {
   let ok = false;
   try { const t = localStorage.getItem(SAVE_KEY); if (t) { try { loadFrom(t); ok = true; } catch (e) { localStorage.setItem(SAVE_KEY + '_stara', t); ok = false; } } } catch (e) { ok = false; }   // starou hru z menší mapy jen odložit
-  if (!ok) { newState(); showModal('intro'); }
+  if (!ok) newState();
+  showTitle();
   requestAnimationFrame(frame);
 })();
-window.__game = { get S() { return S; }, cam, iso, update, act, render, renderTerrain, select: id => { selId = id; renderUI(); }, reveal, beltAt, BDIR, railAt, terr, comp, waterNear, setJob, loadFrom, serialize };
+window.__game = { get S() { return S; }, showTitle, titleAct, SET, cam, iso, update, act, render, renderTerrain, select: id => { selId = id; renderUI(); }, reveal, beltAt, BDIR, railAt, terr, comp, waterNear, setJob, loadFrom, serialize };

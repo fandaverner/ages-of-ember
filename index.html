@@ -37,7 +37,7 @@
   .row { border-top: 1px solid #a88a55; padding: 7px 0; display: flex; gap: 10px; align-items: center; }
   .row .d { flex: 1; }
   .row.done { opacity: .55; }
-  #toast { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+  #toast { position: absolute; z-index: 60; top: 56px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
   #toast div { background: rgba(43,29,14,.92); color: #f3e6c4; padding: 6px 14px; border-radius: 4px; border: 1px solid #c9a55a; font-size: 14px; }
   #traderBtn { pointer-events: auto; display: none; font-size: 15px; padding: 7px 14px; }
   .hint { font-size: 12px; color: #5a4a2a; margin-top: 6px; }
@@ -59,6 +59,16 @@
   .sepb { width: 10px; flex: none; }
   .bi img { width: calc(var(--bs, 52px) - 4px); height: calc(var(--bs, 52px) - 4px); object-fit: contain; pointer-events: none; }
   .bi.off img { filter: grayscale(.6); }
+  #title { position: absolute; inset: 0; z-index: 50; background: #0d0f0c; overflow: hidden; display: none; }
+  #title .tbg { position: absolute; inset: -30px; background: url(img/titul.webp) center / cover; filter: blur(18px) brightness(.55); }
+  #title .tbox { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(100vw, calc(100vh * 1672 / 941)); aspect-ratio: 1672 / 941; container-type: inline-size; }
+  #title .tbox > img { width: 100%; height: 100%; display: block; }
+  #title .tb { position: absolute; left: 80.2%; width: 13.2%; height: 5.4%; transform: translateY(-50%); background: none; border: none; padding: 0; display: flex; align-items: center; justify-content: center;
+    font: bold 1.45cqw Georgia, serif; letter-spacing: .04em; color: #f3d58a; text-shadow: 0 0 .3cqw #000, 0 .1cqw .2cqw #000; border-radius: .4cqw; transition: color .15s, text-shadow .15s, background .15s; }
+  #title .tb:hover { background: radial-gradient(ellipse at center, rgba(255,170,60,.28), transparent 70%); color: #fff2c8; text-shadow: 0 0 .6cqw #ff9a2a, 0 .1cqw .2cqw #000; }
+  #title .tb.off { color: #8a7b5c; opacity: 1; cursor: default; background: none; text-shadow: 0 .1cqw .2cqw #000; }
+  #tpanel { left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(500px, 90vw); display: none; z-index: 2; font-size: 15px; line-height: 1.45; }
+  #tpanel .row > div:last-child { white-space: nowrap; }
   #tip { bottom: 90px; left: 50%; transform: translateX(-50%); max-width: 440px; display: none; pointer-events: none; }
 </style>
 </head>
@@ -72,6 +82,18 @@
 <div id="tip" class="panel"></div>
 <div id="toast"><button id="traderBtn" data-a="trade">🧳 Pocestný čeká u ohně – směnit</button></div>
 <div id="modal"><div class="panel" id="modalBox"></div></div>
+<div id="title">
+  <div class="tbg"></div>
+  <div class="tbox">
+    <img src="img/titul.webp" alt="Ages of Ember">
+    <button class="tb" data-a="t_new" style="top:43.2%">Nová hra</button>
+    <button class="tb" data-a="t_cont" id="tCont" style="top:52.6%">Pokračovat</button>
+    <button class="tb" data-a="t_load" style="top:62%">Načíst hru</button>
+    <button class="tb" data-a="t_set" style="top:71.3%">Nastavení</button>
+    <button class="tb" data-a="t_quit" style="top:80.7%">Konec</button>
+  </div>
+  <div id="tpanel" class="panel"></div>
+</div>
 <input type="file" id="file" accept=".json,application/json" style="display:none">
 <script src="game.js"></script>
 </body>
