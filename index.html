@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Ages of Ember – od ohně ke hvězdám</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0d0f0c; font-family: Georgia, "Times New Roman", serif; color: #2b1d0e; user-select: none; }
+  canvas { display: block; position: absolute; inset: 0; cursor: default; }
+  .panel { position: absolute; background: linear-gradient(#e9d9b0, #d8c391); border: 3px solid #5a3b1a; box-shadow: 0 0 0 1px #2b1d0e, 0 4px 12px rgba(0,0,0,.5); border-radius: 4px; padding: 8px 10px; font-size: 14px; }
+  #top { top: 0; left: 0; right: 0; border-radius: 0; border-width: 0 0 3px 0; display: flex; gap: 4px 11px; align-items: center; flex-wrap: wrap; padding: 5px 10px; background: linear-gradient(#6b4a25, #4a3016); color: #f3e6c4; }
+  #top .r { white-space: nowrap; }
+  #top .sp { flex: 1; }
+  #left { top: 52px; left: 8px; width: 290px; }
+  #right { top: 52px; right: 8px; width: 285px; }
+  #bottom { bottom: 8px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 20px); display: flex; gap: 4px; align-items: center; flex-wrap: nowrap; overflow: hidden; }
+  #bottom.panel { background: none; border: none; box-shadow: none; padding: 0; }
+  #sel { bottom: 72px; left: 8px; width: 270px; display: none; }
+  h3 { margin: 0 0 6px; font-size: 15px; border-bottom: 1px solid #8a6a3a; padding-bottom: 3px; }
+  .obj { font-weight: bold; line-height: 1.35; }
+  .log { margin-top: 8px; font-size: 12.5px; color: #4a3a22; max-height: 150px; overflow: hidden; }
+  .log div { margin-top: 3px; }
+  button, .btn { font-family: inherit; font-size: 13px; background: linear-gradient(#f6ecd0, #cdb47a); border: 2px solid #5a3b1a; border-radius: 4px; color: #2b1d0e; padding: 4px 8px; cursor: pointer; }
+  button:hover { background: linear-gradient(#fff7df, #dcc48a); }
+  button.off { opacity: .5; cursor: not-allowed; }
+  button.on { background: linear-gradient(#ffe08a, #e0a93a); }
+  #top button { padding: 2px 7px; }
+  .job { display: flex; align-items: center; margin: 4px 0; }
+  .job span.n { flex: 1; }
+  .job b { width: 26px; text-align: center; }
+  .job button { width: 26px; padding: 2px 0; font-weight: bold; }
+  .bb { min-width: 96px; text-align: center; line-height: 1.3; background: linear-gradient(#e9d9b0, #d8c391); border: 3px solid #5a3b1a; border-radius: 4px; padding: 6px 10px; box-shadow: 0 2px 8px rgba(0,0,0,.5); }
+  .bb small, .cost { font-size: 12px; }
+  .lack { color: #a01010; font-weight: bold; }
+  #modal { position: absolute; inset: 0; background: rgba(0,0,0,.55); display: none; align-items: center; justify-content: center; }
+  #modal .panel { position: relative; width: min(560px, 92vw); max-height: 86vh; overflow: auto; font-size: 15px; line-height: 1.45; }
+  .row { border-top: 1px solid #a88a55; padding: 7px 0; display: flex; gap: 10px; align-items: center; }
+  .row .d { flex: 1; }
+  .row.done { opacity: .55; }
+  #toast { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; gap: 6px; align-items: center; pointer-events: none; }
+  #toast div { background: rgba(43,29,14,.92); color: #f3e6c4; padding: 6px 14px; border-radius: 4px; border: 1px solid #c9a55a; font-size: 14px; }
+  #traderBtn { pointer-events: auto; display: none; font-size: 15px; padding: 7px 14px; }
+  .hint { font-size: 12px; color: #5a4a2a; margin-top: 6px; }
+  .tree { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+  .tier { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .arr { font-size: 22px; color: #5a3b1a; }
+  .tech { border: 2px solid #5a3b1a; border-radius: 4px; padding: 3px 6px; background: #f6ecd0; display: flex; flex-direction: column; gap: 1px; font-size: 13px; cursor: help; }
+  .tech .tc { font-size: 12px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .tech .tc button { padding: 0 6px; font-size: 12px; }
+  .tech small { font-size: 12px; line-height: 1.3; }
+  .tech.done { background: #cfe0a8; }
+  .tech.cur { background: #ffe39a; }
+  .tech.lock { opacity: .6; }
+  h4.age { margin: 6px 0 0; font-size: 14px; color: #5a3b1a; }
+  .bi { width: var(--bs, 52px); height: var(--bs, 52px); padding: 1px; display: flex; align-items: center; justify-content: center; flex: none; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+  .bi.cat { background: linear-gradient(#6b4a25, #4a3016); border-color: #2b1d0e; }
+  .bi.cat span { font-size: calc(var(--bs, 52px) * .5); line-height: 1; }
+  .bi.cat.on { background: linear-gradient(#ffe08a, #e0a93a); }
+  .sepb { width: 10px; flex: none; }
+  .bi img { width: calc(var(--bs, 52px) - 4px); height: calc(var(--bs, 52px) - 4px); object-fit: contain; pointer-events: none; }
+  .bi.off img { filter: grayscale(.6); }
+  #tip { bottom: 90px; left: 50%; transform: translateX(-50%); max-width: 440px; display: none; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="top" class="panel"></div>
+<div id="left" class="panel"></div>
+<div id="right" class="panel"></div>
+<div id="sel" class="panel"></div>
+<div id="bottom" class="panel"></div>
+<div id="tip" class="panel"></div>
+<div id="toast"><button id="traderBtn" data-a="trade">🧳 Pocestný čeká u ohně – směnit</button></div>
+<div id="modal"><div class="panel" id="modalBox"></div></div>
+<input type="file" id="file" accept=".json,application/json" style="display:none">
+<script src="game.js"></script>
+</body>
+</html>
