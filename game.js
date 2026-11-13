@@ -1559,7 +1559,7 @@ function updTrader(dt) {
 const TEX = {};
 let terrMode = 'kresba', terrDirty = false, texReady = false;
 const SET_KEY = 'agesOfEmber_nastaveni';
-const SET = (() => { try { return Object.assign({ terr: 'krasna', autosave: 60 }, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) { return { terr: 'krasna', autosave: 60 }; } })();
+const SET = (() => { try { return Object.assign({ terr: 'krasna', autosave: 60, music: 0.6, sfx: 0.8, mute: false }, JSON.parse(localStorage.getItem(SET_KEY) || '{}')); } catch (e) { return { terr: 'krasna', autosave: 60 }; } })();
 function saveSet() { try { localStorage.setItem(SET_KEY, JSON.stringify(SET)); } catch (e) { } }
 function applyTerrain() {   // přepne malovaný / jednoduchý terén za běhu
   terrMode = (SET.terr === 'krasna' && texReady) ? 'textury' : 'kresba';
@@ -2843,7 +2843,7 @@ function renderUI() {
   h += `<span class="sp"></span>`;
   { const rc = S.research.cur; h += `<button data-a="research" class="${rc ? 'on' : ''}">${rc ? '🔬 ' + TECH[rc.id].name + ' ' + Math.floor(rc.t / TECH[rc.id].time * 100) + ' %' : '🌳 Technologie'}</button>`; }
   [[0, '⏸'], [1, '1×'], [2, '2×'], [4, '4×']].forEach(s => h += `<button data-a="speed" data-v="${s[0]}" class="${S.speed === s[0] ? 'on' : ''}">${s[1]}</button>`);
-  h += `<button data-a="save">💾 Uložit</button><button data-a="menu">☰ Hra</button>`;
+  h += `<button data-a="mute" title="${SET.mute ? 'Zapnout zvuk' : 'Ztlumit zvuk'}">${SET.mute ? '🔇' : '🔊'}</button><button data-a="save">💾 Uložit</button><button data-a="menu">☰ Hra</button>`;
   $('top').innerHTML = h;
   { const tp = $('top').offsetHeight + 8 + 'px'; $('left').style.top = tp; $('right').style.top = tp; }
 
@@ -3183,6 +3183,44 @@ function act(a, v) {
   renderUI();
 }
 
+/* ---------- hudba ---------- */
+// hudba/<jméno>.ogg nebo .mp3; chybějící skladba = ticho. Úvod hraje v menu, ve hře doba1–doba6.
+const Music = {
+  el: null, name: null, want: null, ok: true, missing: new Set(), fadeT: null,
+  target() { return titleOn ? 'uvod' : modalKind === 'over' ? 'zanik' : modalKind === 'final' ? 'vitezstvi' : 'doba' + ((S ? S.age : 0) + 1); },
+  once: new Set(['zanik', 'vitezstvi']),   // hrají jednou, neopakují se
+  vol() { return SET.mute ? 0 : SET.music; },
+  sync() {
+    const w = this.target();
+    if (w !== this.want) { this.want = w; this.fadeOut(); if (!this.missing.has(w)) this.load(w, ['ogg', 'mp3']); return; }
+    if (this.el && this.el.paused && !this.el.ended && this.ok) this.resume();
+  },
+  resume() { const a = this.el; if (a) a.play().then(() => this.fadeTo(a, this.vol(), 1500)).catch(e => { if (e && e.name === 'NotAllowedError') this.ok = false; }); },
+  load(w, exts) {
+    if (!exts.length) { this.missing.add(w); return; }
+    const a = new Audio('hudba/' + w + '.' + exts[0]);
+    a.loop = !this.once.has(w); a.volume = 0; a.preload = 'auto';
+    a.onerror = () => { if (this.el !== a) return; this.el = null; this.name = null; this.load(w, exts.slice(1)); };   // jen když se nenačetla aktuální skladba
+    this.el = a; this.name = w;
+    this.resume();
+  },
+  fadeTo(a, v, ms) {
+    const v0 = a.volume, t0 = performance.now();
+    const iv = setInterval(() => { if (this.el !== a) return clearInterval(iv); const k = Math.min(1, (performance.now() - t0) / ms); a.volume = Math.max(0, Math.min(1, v0 + (this.vol() - v0) * k)); if (k >= 1) clearInterval(iv); }, 50);
+  },
+  fadeOut() {
+    const a = this.el; this.el = null; this.name = null; if (!a) return;
+    const v0 = a.volume, t0 = performance.now();
+    const iv = setInterval(() => { const k = Math.min(1, (performance.now() - t0) / 1000); a.volume = v0 * (1 - k); if (k >= 1) { clearInterval(iv); a.pause(); a.src = ''; } }, 50);
+  },
+  setVol() { if (this.el) this.el.volume = this.vol(); },
+};
+// prohlížeč pustí zvuk až po prvním kliknutí nebo klávese
+['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { Music.ok = true; if (Music.el && Music.el.paused && !Music.el.ended) Music.resume(); }, true));
+setInterval(() => Music.sync(), 1000);
+window.setVol = (k, v) => { SET[k] = Math.max(0, Math.min(1, +v / 100)); saveSet(); Music.setVol(); };
+function muteBtns() { document.querySelectorAll('[data-a="mute"]').forEach(b => { b.textContent = SET.mute ? '🔇' : '🔊'; b.title = SET.mute ? 'Zapnout zvuk' : 'Ztlumit zvuk'; }); }
+
 /* ---------- uložené hry pod jménem ---------- */
 const DESK = !!(window.Neutralino && window.NL_VERSION);   // běží jako AgesOfEmber.exe
 const AUTO_NAME = 'Automatické uložení';
@@ -3270,9 +3308,9 @@ const hasSave = () => { try { return !!localStorage.getItem(SAVE_KEY); } catch (
 function showTitle() {
   titleOn = true; closeModal(); tPanel(null);
   $('tCont').classList.toggle('off', !hasSave());
-  $('title').style.display = 'block';
+  $('title').style.display = 'block'; muteBtns(); Music.sync();
 }
-function hideTitle() { titleOn = false; tPanel(null); $('title').style.display = 'none'; last = performance.now(); renderUI(); }
+function hideTitle() { titleOn = false; tPanel(null); $('title').style.display = 'none'; last = performance.now(); renderUI(); Music.sync(); }
 function tPanel(kind) {
   const el = $('tpanel');
   if (!kind) { el.style.display = 'none'; return; }
@@ -3284,6 +3322,8 @@ function tPanel(kind) {
     const opt = (a, v, t, cur) => `<button data-a="${a}" data-v="${v}" class="${cur ? 'on' : ''}">${t}</button>`;
     h = `<h3>Nastavení</h3>
       <div class="row"><div class="d"><b>Vzhled krajiny</b><br><small>Jednoduchá kresba je rychlejší na slabších počítačích.</small></div><div>${opt('t_terr', 'krasna', 'Malovaná', SET.terr === 'krasna')} ${opt('t_terr', 'jednoducha', 'Jednoduchá', SET.terr !== 'krasna')}</div></div>
+      <div class="row"><div class="d"><b>Hlasitost hudby</b></div><input type="range" min="0" max="100" step="5" value="${Math.round(SET.music * 100)}" oninput="setVol('music', this.value)" style="width:150px"></div>
+      <div class="row"><div class="d"><b>Hlasitost zvuků</b><br><small>Zvuky přibudou v další verzi.</small></div><input type="range" min="0" max="100" step="5" value="${Math.round(SET.sfx * 100)}" oninput="setVol('sfx', this.value)" style="width:150px"></div>
       <div class="row"><div class="d"><b>Automatické ukládání</b><br><small>Hra se ukládá do prohlížeče i při zavření okna.</small></div><div>${opt('t_auto', 60, '1 min', SET.autosave === 60)} ${opt('t_auto', 300, '5 min', SET.autosave === 300)} ${opt('t_auto', 0, 'Vyp.', !SET.autosave)}</div></div>
       <div class="row"><div class="d"><b>Smazat uloženou hru</b><br><small>Vymaže rozehranou hru z tohoto prohlížeče.</small></div><button data-a="t_del" class="${hasSave() ? '' : 'off'}">Smazat</button></div>
       <div style="text-align:right;margin-top:8px"><button data-a="t_back">Zpět</button></div>`;
@@ -3332,6 +3372,7 @@ function titleAct(a, v) {
       if (S && S.people.length && hasSave()) saveGame(); tPanel('quit'); try { window.close(); } catch (e) { } return true;
     case 't_back': tPanel(null); $('tCont').classList.toggle('off', !hasSave()); return true;
     case 'title': if (S && S.people.length) saveGame(); showTitle(); return true;
+    case 'mute': SET.mute = !SET.mute; saveSet(); Music.setVol(); muteBtns(); return true;
   }
   return false;
 }
