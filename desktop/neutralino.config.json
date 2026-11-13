@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
+  "applicationId": "cz.fandaverner.agesofember",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "documentRoot": "/www/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": { "enabled": false, "writeToLogFile": false },
+  "nativeAllowList": ["app.*", "os.*", "filesystem.*", "window.*", "debug.log"],
+  "globalVariables": {},
+  "modes": {
+    "window": {
+      "title": "Ages of Ember",
+      "width": 1366,
+      "height": 800,
+      "minWidth": 900,
+      "minHeight": 600,
+      "center": true,
+      "maximize": true,
+      "resizable": true,
+      "icon": "/www/img/ikona.png",
+      "enableInspector": false,
+      "exitProcessOnClose": false
+    }
+  },
+  "cli": {
+    "binaryName": "AgesOfEmber",
+    "resourcesPath": "/www/",
+    "extensionsPath": "/extensions/",
+    "clientLibrary": "/www/neutralino.js",
+    "binaryVersion": "6.4.0",
+    "clientVersion": "6.4.0"
+  }
+}

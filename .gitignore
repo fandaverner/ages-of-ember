@@ -2,3 +2,10 @@
 img/*_overview.png
 img/jeskyne_original.png
 .claude/
+graphify-out/
+# desktopová verze: stažené programy a výsledek sestavení
+desktop/bin/
+desktop/www/
+desktop/dist/
+desktop/ikona.ico
+desktop/node_modules/

@@ -1,0 +1,10 @@
+{
+  "name": "ages-of-ember-desktop",
+  "private": true,
+  "description": "Sestavení Ages of Ember jako AgesOfEmber.exe",
+  "scripts": { "sestavit": "bash sestavit.sh" },
+  "devDependencies": {
+    "@neutralinojs/neu": "11.8.0",
+    "rcedit": "4.0.1"
+  }
+}
