@@ -914,7 +914,7 @@ function update(dt) {
     }
     if (S.age >= 1) {   // pestrá strava
       if (S.res.maso < 1 && S.res.ryby < 1) miss.push('maso');
-      if (S.res.obili < 1 && S.res.chleb < 1 && S.res.bobule < 1) miss.push('obili');
+      if (has('pekarna') ? S.res.chleb < 1 && S.res.bobule < 1 : S.res.obili < 1 && S.res.chleb < 1 && S.res.bobule < 1) miss.push(has('pekarna') ? 'chleb' : 'obili');
     }
     if (miss.length && S.time - (S.fullT.needs || -99) > 60) { S.fullT.needs = S.time; log('Lidem chybí ' + miss.map(missName).join(', ') + '. Dokud to nebude, osada neporoste.'); }
     S.missing = miss;
@@ -932,6 +932,7 @@ function update(dt) {
       const g = groups[((S.dietTurn || 0) + gi) % groups.length];
       for (const r of g) if (S.res[r] >= 1 && (!best || S.res[r] > S.res[best])) best = r;
     }
+    if (!best && S.res.obili >= 1) best = 'obili';   // v nouzi sáhnou i na obilí pro mlýn
     if (!best) { S.debt = 1; break; }
     S.dietTurn = ((S.dietTurn || 0) + 1) % groups.length;
     S.res[best]--; S.debt -= nut[best];
@@ -1103,7 +1104,8 @@ function update(dt) {
 const NEEDS = [{ age: 1, r: 'keramika', per: 0.1, tech: 'hrncirstvi' }, { age: 2, r: 'prkna', per: 0.08, tech: 'tesarstvi' }, { age: 3, r: 'stroje', per: 0.02, tech: 'stroje' }, { age: 4, r: 'plasty', per: 0.05, tech: 'ropa' }, { age: 4, r: 'elektronika', per: 0.03, tech: 'elektronika' }, { age: 5, r: 'kompozity', per: 0.03, tech: 'nano' }];
 const needOn = nd => S.age >= nd.age && S.research.done[nd.tech];
 const missName = r => S.age >= 1 && r === 'maso' ? 'maso nebo ryby' : S.age >= 1 && r === 'obili' ? 'obilí nebo chléb' : RES[r][1].toLowerCase();
-const foodGroups = () => S.age >= 1 ? [['maso', 'ryby'], ['chleb', 'obili', 'bobule']] : [['chleb', 'maso', 'ryby', 'obili', 'bobule']];
+// s pekárnou jedí lidé chléb a obilí zůstane pro mlýn
+const foodGroups = () => S.age >= 1 ? [['maso', 'ryby'], has('pekarna') ? ['chleb', 'bobule'] : ['chleb', 'obili', 'bobule']] : [['chleb', 'maso', 'ryby', 'obili', 'bobule']];
 // moderní továrny bez dostatku proudu skoro stojí
 const NEED_POWER = { rafinerie: 1, elektro: 1, nanotovarna: 1, robotovarna: 1, ropny_vrt: 1, vfarma: 1 };
 // proč se chybějící zboží nevyrábí (první dílna, která ho dělá a stojí)
