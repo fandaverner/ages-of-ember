@@ -698,6 +698,8 @@ function reveal(cx, cy, r) {
   }
 }
 const iso = (x, y) => [(x - y) * TW / 2 + OX, (x + y) * TH / 2];
+// kam je postava otočená: podle pohybu na obrazovce; při pohybu skoro svisle dolů doprava, nahoru doleva (otočí se čelem vzad)
+const faceDir = (dx, dy) => { const sx = dx - dy, sy = dx + dy; return Math.abs(sx) < 0.5 * Math.abs(sy) ? (sy > 0 ? 1 : -1) : (sx >= 0 ? 1 : -1); };
 function screenToTile(sx, sy) {
   const wx = (sx - cv.width / 2) / cam.z + cam.x, wy = (sy - cv.height / 2) / cam.z + cam.y;
   const a = (wx - OX) / (TW / 2), b = wy / (TH / 2);
@@ -798,7 +800,7 @@ function updWild(dt) {
       w.t0 += dt;
       if (!p || w.t0 > (w.t === 'vlk' ? 9 : 6) || Math.hypot(w.x - w.hx, w.y - w.hy) > 14 || safeAt(p.x, p.y)) { w.st = 'back'; w.cd = 45; continue; }
       const dx = p.x - w.x, dy = p.y - w.y, d = Math.hypot(dx, dy);
-      w.dir = dx - dy >= 0 ? 1 : -1;
+      w.dir = faceDir(dx, dy);
       if (d > 0.45) {
         w.st = 'chase';
         const st = Math.min(d, def.sp * 2 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
@@ -819,7 +821,7 @@ function updWild(dt) {
       if (d < 0.3) { w.st = 'idle'; w.t0 = 3; continue; }
       const st = Math.min(d, def.sp * 1.4 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
       if (wildOk(nx, ny)) { w.x = nx; w.y = ny; } else { w.x = w.hx + 0.5; w.y = w.hy + 0.5; }
-      w.wd = (w.wd || 0) + st; w.dir = dx - dy >= 0 ? 1 : -1;
+      w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy);
       continue;
     }
     // hledá kořist: vlci hlavně v noci, medvěd když ho někdo vyruší u doupěte
@@ -854,7 +856,7 @@ function updWild(dt) {
       if (d < 0.1) { w.st = 'idle'; w.t0 = 2 + Math.random() * 5; continue; }
       const st = Math.min(d, def.sp * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
       if (!wildOk(nx, ny)) { w.st = 'idle'; w.t0 = 1; continue; }
-      w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; w.dir = dx - dy >= 0 ? 1 : -1;
+      w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy);
     }
   }
 }
@@ -1326,7 +1328,7 @@ function moveTo(p, tx, ty, sp, dt) {
   const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
   if (d < 0.12) return true;
   const st = Math.min(d, sp * dt);
-  p.x += dx / d * st; p.y += dy / d * st; p.wd = ((p.wd || 0) + st) % 1000; p.mv = true; p.dir = dx - dy >= 0 ? 1 : -1;
+  p.x += dx / d * st; p.y += dy / d * st; p.wd = ((p.wd || 0) + st) % 1000; p.mv = true; p.dir = faceDir(dx, dy);
   return false;
 }
 function nearestNode(p, type) {
