@@ -7,7 +7,7 @@ rm -rf www/img; mkdir -p www/img
 # jen soubory, které hra opravdu používá
 cp "$HRA/game.js" www/
 rm -rf www/hudba www/zvuky; cp -r "$HRA/hudba" "$HRA/zvuky" www/
-sed 's|<script src="game.js"></script>|<script src="neutralino.js"></script>\n<script src="game.js"></script>|' "$HRA/index.html" > www/index.html
+sed -E 's|<script src="game.js(\?v=[^"]*)?"></script>|<script src="neutralino.js"></script>\n<script src="game.js"></script>|' "$HRA/index.html" > www/index.html
 cp -r "$HRA/img/s" www/img/
 cp "$HRA"/img/zem_*.png "$HRA/img/titul.webp" "$HRA/img/ikona.png" www/img/
 # ikona programu (.exe) – soubor .ico s obrázkem PNG uvnitř
