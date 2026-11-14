@@ -14,6 +14,11 @@ const RES = {
   zelruda: ['⛏️', 'Železná ruda'], zelezo: ['⚙️', 'Železo'], uhli: ['⚫', 'Uhlí'], cihly: ['🧱', 'Cihly'], ocel: ['🔩', 'Ocel'], stroje: ['🛠️', 'Stroje'], ropa: ['🛢️', 'Ropa'], plasty: ['🧴', 'Plasty'], elektronika: ['💾', 'Elektronika'], kompozity: ['🔷', 'Kompozity'], roboti: ['🤖', 'Roboti'], mince: ['🪙', 'Mince'], musle: ['🐚', 'Mušle'], vedeni: ['💡', 'Vědění']
 };
 const UNCAPPED = { vedeni: 1, musle: 1, mince: 1 };
+// od které doby se surovina používá a od které už ne (pevné pořadí podle RES)
+const RES_FROM = { hlina: 1, keramika: 1, ruda: 1, med: 1, cin: 1, bronz: 1, obili: 1, mince: 1, prkna: 2, mouka: 2, chleb: 2, zelruda: 2, zelezo: 2,
+  uhli: 3, cihly: 3, ocel: 3, stroje: 3, ropa: 4, plasty: 4, elektronika: 4, kompozity: 5, roboti: 5 };
+const RES_UNTIL = { pazourek: 1, bobule: 1, musle: 1 };
+const ageRes = () => Object.keys(RES).filter(r => ((RES_FROM[r] || 0) <= S.age && !(RES_UNTIL[r] <= S.age)) || Math.floor(S.res[r]) > 0);
 
 const NODE = {
   strom:    { res: 'klacky',   max: 20, regrow: 0, work: 3 },
@@ -85,14 +90,14 @@ const BLD = {
   ohniste: { until: 1, name: 'Ohniště', desc: 'Hřeje v noci, peče maso, láká pocestné a u ohně přibývá vědění. Spaluje klacky.', req: 'ohen', unique: true,
     lv: [{ cost: { klacky: 5, kamen: 5 }, time: 24 }] },
   chyse: { name: 'Chýše', names: ['Chýše', 'Chýše z kůží', 'Kamenná chýše', 'Hliněný dům', 'Roubenka', 'Cihlový činžák', 'Panelový dům', 'Arkologie'], desc: 'Bydlení pro další lidi.', req: 'chyse',
-    lv: [{ cost: { klacky: 15 }, time: 40, pop: 3 },
-         { cost: { klacky: 20, kozesiny: 5 }, time: 56, pop: 5 },
-         { cost: { klacky: 25, kamen: 15, nastroje: 3 }, time: 80, pop: 8 },
-         { cost: { hlina: 30, klacky: 20, keramika: 4 }, time: 100, pop: 10, req: 'hrncirstvi' },
-         { cost: { prkna: 30, kamen: 20, hlina: 10 }, time: 120, pop: 12, req: 'tesarstvi' },
-         { cost: { cihly: 40, ocel: 5, prkna: 10 }, time: 150, pop: 18, req: 'cihlove' },
-         { cost: { cihly: 60, ocel: 20, plasty: 10 }, time: 180, pop: 28, req: 'panelaky' },
-         { cost: { kompozity: 20, ocel: 30, elektronika: 10 }, time: 220, pop: 45, req: 'arkologie' }] },
+    lv: [{ cost: { klacky: 15 }, time: 40, pop: 2 },
+         { cost: { klacky: 20, kozesiny: 5 }, time: 56, pop: 3 },
+         { cost: { klacky: 25, kamen: 15, nastroje: 3 }, time: 80, pop: 4 },
+         { cost: { hlina: 30, klacky: 20, keramika: 4 }, time: 100, pop: 5, req: 'hrncirstvi' },
+         { cost: { prkna: 30, kamen: 20, hlina: 10 }, time: 120, pop: 6, req: 'tesarstvi' },
+         { cost: { cihly: 40, ocel: 5, prkna: 10 }, time: 150, pop: 8, req: 'cihlove' },
+         { cost: { cihly: 60, ocel: 20, plasty: 10 }, time: 180, pop: 12, req: 'panelaky' },
+         { cost: { kompozity: 20, ocel: 30, elektronika: 10 }, time: 220, pop: 18, req: 'arkologie' }] },
   jama: { name: 'Zásobní jáma', names: ['Zásobní jáma', 'Větší zásobní jáma', 'Sýpka'], desc: 'Zvětšuje sklad a lidé do ní nosí suroviny. Od starověku ji přestavíte na sýpku.', req: 'chyse', until: 1,
     lv: [{ cost: { kamen: 10, klacky: 5 }, time: 32, store: 60 },
          { cost: { kamen: 25, nastroje: 2 }, time: 56, store: 150 },
@@ -106,9 +111,9 @@ const BLD = {
          { cost: { klacky: 30, kamen: 15, nastroje: 3 }, time: 90, js: { klacky: 5 } },
          { cost: { klacky: 40, kamen: 20, nastroje: 5 }, time: 100, js: { klacky: 8 }, req: 'tesarstvi' }] },
   lom: { name: 'Kamenolom', names: ['Kamenolom', 'Větší kamenolom', 'Velký lom'], desc: 'Lamači tu lámou kámen přímo ze země – lom nikdy nedojde. V pravěku tu mají místo i sběrači pazourku.', req: 'nastroje',
-    lv: [{ cost: { klacky: 15, kamen: 10, nastroje: 1 }, time: 60, js: { lamaci: 2, pazourek: 2 }, wk: { in: {}, out: { kamen: 2 }, t: 8 }, ind: true },
-         { cost: { klacky: 25, kamen: 25, nastroje: 3 }, time: 90, js: { lamaci: 4, pazourek: 4 }, wk: { in: {}, out: { kamen: 2 }, t: 6 }, ind: true },
-         { cost: { prkna: 30, kamen: 20, nastroje: 5 }, time: 110, js: { lamaci: 8 }, wk: { in: {}, out: { kamen: 3 }, t: 7 }, ind: true, req: 'tesarstvi' }] },
+    lv: [{ cost: { klacky: 15, kamen: 10, nastroje: 1 }, time: 60, js: { lamaci: 2, pazourek: 2 }, wk: { in: {}, out: { kamen: 2 }, t: 14 }, ind: true },
+         { cost: { klacky: 25, kamen: 25, nastroje: 3 }, time: 90, js: { lamaci: 4, pazourek: 4 }, wk: { in: {}, out: { kamen: 2 }, t: 12 }, ind: true },
+         { cost: { prkna: 30, kamen: 20, nastroje: 5 }, time: 110, js: { lamaci: 8 }, wk: { in: {}, out: { kamen: 3 }, t: 13 }, ind: true, req: 'tesarstvi' }] },
   lovec: { until: 4, name: 'Lovecká chata', desc: 'Bez ní se neloví. Lovci odtud vyrážejí na zvěř a nosí sem maso a kožešiny.', req: 'lov',
     lv: [{ cost: { klacky: 20, kamen: 5, nastroje: 2 }, time: 65, js: { lov: 2 } },
          { cost: { klacky: 30, kozesiny: 6, nastroje: 3 }, time: 95, js: { lov: 4 } }] },
@@ -135,14 +140,17 @@ const BLD = {
          { cost: { hlina: 40, kamen: 30, keramika: 10 }, time: 110, store: 300 },
          { cost: { prkna: 30, kamen: 30 }, time: 90, req: 'tesarstvi', into: 'sklad' }] },
   hliniste: { name: 'Hliniště', names: ['Hliniště', 'Velké hliniště'], desc: 'Kopáči tu těží hlínu přímo z jámy – hliniště nikdy nedojde.', req: 'hrncirstvi',
-    lv: [{ cost: { klacky: 20, kamen: 10, nastroje: 2 }, time: 60, js: { kopaci: 4 }, wk: { in: {}, out: { hlina: 2 }, t: 8 }, ind: true },
-         { cost: { prkna: 20, kamen: 20, nastroje: 4 }, time: 90, js: { kopaci: 8 }, wk: { in: {}, out: { hlina: 3 }, t: 8 }, ind: true, req: 'tesarstvi' }] },
+    lv: [{ cost: { klacky: 20, kamen: 10, nastroje: 2 }, time: 60, js: { kopaci: 4 }, wk: { in: {}, out: { hlina: 2 }, t: 10 }, ind: true },
+         { cost: { prkna: 20, kamen: 20, nastroje: 4 }, time: 90, js: { kopaci: 8 }, wk: { in: {}, out: { hlina: 3 }, t: 13 }, ind: true, req: 'tesarstvi' }] },
   skolka: { name: 'Lesní školka', desc: 'Lesníci sázejí v okolí mladé stromky. Za pár minut z nich vyrostou stromy, které se dají kácet.', req: 'lesnictvi',
     lv: [{ cost: { klacky: 20, kamen: 5, nastroje: 2 }, time: 60, js: { les: 2 }, plant: 7 },
          { cost: { klacky: 30, keramika: 4, nastroje: 3 }, time: 90, js: { les: 4 }, plant: 10 }] },
   ohrada: { name: 'Ohrada', desc: 'Ochočená zvířata. Pastevci se o ně starají a dávají maso a kůže, které nikdy nedojdou.', req: 'chov',
-    lv: [{ cost: { klacky: 30, kamen: 5 }, time: 70, js: { chov: 2 }, farm: { out: { maso: 7, kozesiny: 1 }, t: 50 } },
-         { cost: { klacky: 40, kamen: 15, obili: 20 }, time: 100, js: { chov: 3 }, farm: { out: { maso: 12, kozesiny: 1 }, t: 50 } }] },
+    lv: [{ cost: { klacky: 30, kamen: 5 }, time: 70, js: { chov: 2 }, farm: { out: { maso: 6, kozesiny: 1 }, t: 50 } },
+         { cost: { klacky: 40, kamen: 15, obili: 20 }, time: 100, js: { chov: 3 }, farm: { out: { maso: 10, kozesiny: 1 }, t: 50 } }] },
+  straz: { name: 'Strážní věž', names: ['Strážní věž', 'Kamenná strážnice'], desc: 'Strážný vidí daleko do krajiny a střílí na vlky a medvědy. Lidé v okolí věže jsou v bezpečí. V noci rozsvítí pochodně – svítí daleko a hlídá větší okolí.', req: 'lov', until: 4,
+    lv: [{ cost: { klacky: 30, kamen: 15, nastroje: 2 }, time: 60, guard: 7, dmg: 10 },
+         { cost: { kamen: 40, prkna: 15, zelezo: 5 }, time: 90, guard: 9, dmg: 18, req: 'zelezo' }] },
   smeniste: { r: 2, name: 'Tržiště', names: ['Tržiště', 'Větší tržiště', 'Velké tržiště'], desc: 'Tady se prodává i nakupuje. Kupci chodí častěji, zdrží se déle a nabízejí víc zboží.', req: 'obchod', unique: true,
     lv: [{ cost: { klacky: 30, kamen: 20, keramika: 5 }, time: 80, trade: 1 },
          { cost: { klacky: 40, kamen: 30, mince: 20 }, time: 110, trade: 2 },
@@ -202,7 +210,7 @@ const BLD = {
   robotovarna: { r: 2, name: 'Robotická továrna', desc: 'Z elektroniky a kompozitů skládá roboty.', req: 'robotika',
     lv: [{ cost: { kompozity: 30, elektronika: 30, ocel: 40 }, time: 240, js: { robotici: 3 }, wk: { in: { elektronika: 1, kompozity: 1 }, out: { roboti: 1 }, t: 20 }, ind: true }] },
   vfarma: { name: 'Vertikální farma', desc: 'Prosklená věž s patry plnými obilí. Sklidí mnohem víc než pole.', req: 'vfarmy',
-    lv: [{ cost: { kompozity: 15, elektronika: 10, ocel: 20 }, time: 200, js: { agronomove: 2 }, farm: { out: { obili: 30 }, t: 40 } }] },
+    lv: [{ cost: { kompozity: 15, elektronika: 10, ocel: 20 }, time: 200, js: { agronomove: 2 }, farm: { out: { obili: 20 }, t: 40 } }] },
   vytah: { r: 2, name: 'Vesmírný výtah', desc: 'Lano až na oběžnou dráhu. Cesta ke hvězdám – poslední stavba lidstva.', req: 'vytah', unique: true,
     lv: [{ cost: { ocel: 300, kompozity: 150, roboti: 80, elektronika: 150, mince: 1000 }, time: 600, final: true }] }
 };
@@ -360,7 +368,7 @@ const OBJ = [
   { t: 'Vyzkoumejte oštěpy a lov, postavte loveckou chatu, pošlete lovce na zvěř a získejte 10 kožešin.', c: () => S.stats.hides >= 10 },
   { t: 'Kmen roste. Dosáhněte 12 obyvatel a vylepšete jednu chýši na 2. stupeň (klikněte na ni).', c: () => S.people.length >= 12 && S.blds.some(b => b.type === 'chyse' && b.lvl >= 2) },
   { t: 'Postavte dřevorubeckou chatu, kamenolom, malovanou skálu a zásobní jámu.', c: () => has('drevo') && has('lom') && has('skala') && has('jama') },
-  { t: 'Poslední krok pravěku: klikněte na jeskyni a přestavte ji na náčelníkův dlouhý dům. Potřebujete 12 obyvatel a 5 mušlí – ty mají jen pocestní.', c: () => S.age >= 1 },
+  { t: 'Poslední krok pravěku: klikněte na jeskyni a přestavte ji na náčelníkův dlouhý dům. Potřebujete 12 obyvatel a 5 mušlí – vymění vám je pocestní a občas je na břehu najdou rybáři.', c: () => S.age >= 1 },
   { t: 'Začíná starověk! Vyzkoumejte hrnčířství, postavte hliniště a hrnčířskou dílnu.', c: () => has('hrncir') },
   { t: 'Pošlete do dílny hrnčíře a vyrobte 10 nádob 🏺.', c: () => (S.stats.made.keramika || 0) >= 10 },
   { t: 'Lesy kolem osady řídnou. Vyzkoumejte lesnictví a postavte lesní školku – lesníci budou sázet nové stromy.', c: () => has('skolka') },
@@ -606,7 +614,7 @@ function genNodes() {
 function newState() {
   S = {
     v: 1, seed: (Math.random() * 1e9) | 0, time: 15,
-    res: { klacky: 0, kamen: 0, pazourek: 0, bobule: 15, maso: 0, ryby: 0, obili: 0, kozesiny: 0, nastroje: 0, musle: 0, vedeni: 0 },
+    res: { klacky: 0, kamen: 0, pazourek: 0, bobule: 40, maso: 15, ryby: 0, obili: 0, kozesiny: 0, nastroje: 0, musle: 0, vedeni: 0 },
     jobs: {}, people: [], nodes: [], blds: [], nid: 1, site: null,
     research: { done: {}, cur: null }, fire: { lit: false, t: 0 },
     trader: null, nextTrader: 70, obj: 0, log: [], stats: { trades: 0, tools: 0, hides: 0 },
@@ -641,6 +649,7 @@ function afterLoad(fromSave) {
   S.nodes.forEach(n => { occ.set(n.x + n.y * N, n); nodeMap.set(n.id, n); });
   S.blds.forEach(b => occ.set(b.x + b.y * N, b));
   genAgeOres(true);
+  if (!S.wild) genWild();
   S.rails = S.rails || []; railSet = new Set(S.rails); railMode = false; railsDirty = true;
   S.trains = S.trains || []; S.stats.trainCargo = S.stats.trainCargo || 0; S.stats.flights = S.stats.flights || 0;
   roadSet = new Set(S.roads || []); beltMap = new Map((S.belts || []).map(b => [b.k, b]));
@@ -696,6 +705,178 @@ function screenToTile(sx, sy) {
 }
 function home() { return S.blds.find(b => b.type === 'ohniste') || S.blds[0]; }
 
+/* ---------- divoká zvířata ---------- */
+const WILD = { vlk: { sp: 0.95, h: 36, range: 6 }, medved: { sp: 0.6, h: 46, range: 4 } };
+const wildOk = (x, y) => { const i = Math.floor(x) + Math.floor(y) * N; return x >= 1 && y >= 1 && x < N - 1 && y < N - 1 && terr[i] !== T_WATER && comp[i] === comp[CX + CY * N]; };
+const nearTown = (x, y, d) => S.blds.some(b => Math.hypot(b.x - x, b.y - y) < d);
+function genWild() {
+  S.wild = [];
+  const spots = [];
+  for (let y = 3; y < N - 3; y++) for (let x = 3; x < N - 3; x++) {
+    const i = x + y * N, d = Math.hypot(x - CX, y - CY);
+    if (d < 17 || !wildOk(x, y) || occ.has(i)) continue;
+    let trees = 0; for (let yy = y - 2; yy <= y + 2; yy++) for (let xx = x - 2; xx <= x + 2; xx++) { const o = occ.get(xx + yy * N); if (o && o.t === 'strom') trees++; }
+    spots.push([(trees >= 1 && trees <= 5 ? 6 : 0) + hash(x, y, S.seed + 501) * 5, x, y]);   // okraj lesa – zvířata jsou vidět
+  }
+  spots.sort((a, b) => b[0] - a[0]);
+  const used = [];
+  const take = () => { for (const [, x, y] of spots) if (!used.some(u => Math.hypot(u[0] - x, u[1] - y) < 12)) { used.push([x, y]); return [x, y]; } return null; };
+  for (let k = 0; k < 4; k++) {   // vlčí smečky po 2–3
+    const h = take(); if (!h) break;
+    const n = 2 + (hash(h[0], h[1], 7) > 0.5 ? 1 : 0);
+    for (let i = 0; i < n; i++) S.wild.push({ id: S.nid++, t: 'vlk', x: h[0] + 0.5 + i * 0.6, y: h[1] + 0.5 + (i % 2) * 0.5, hx: h[0], hy: h[1], st: 'idle', t0: Math.random() * 4, dir: 1 });
+  }
+  for (let k = 0; k < 3; k++) {   // medvědi samotáři
+    const h = take(); if (!h) break;
+    S.wild.push({ id: S.nid++, t: 'medved', x: h[0] + 0.5, y: h[1] + 0.5, hx: h[0], hy: h[1], st: 'idle', t0: Math.random() * 4, dir: 1 });
+  }
+}
+const towerSight = l => l.guard * 2;   // strážný vidí daleko – odkryje okolí
+function towerReveal() { for (const b of S.blds) { const l = lvOf(b); if (l.guard && b.seen !== b.lvl) { b.seen = b.lvl; reveal(b.x, b.y, towerSight(l)); } } }
+const guardR = l => l.guard * (isNight() ? 1.5 : 1);   // v noci rozsvítí pochodně a hlídají dál
+const WHP = { vlk: 40, medved: 120 }, WBITE = { vlk: 3, medved: 9 };
+// bezpečno: u strážní věže, u hlavní budovy, v noci u osvětlených staveb (v pravěku u ohně)
+function safeAt(x, y) {
+  for (const b of S.blds) {
+    const d = Math.hypot(b.x + 0.5 - x, b.y + 0.5 - y), l = lvOf(b);
+    if (l.guard && d < guardR(l)) return true;
+    if (b.type === 'jeskyne' && d < 5) return true;
+    if (isNight() && ((S.age >= 1 && d < 2.5) || (b.type === 'ohniste' && S.fire.lit && d < 5))) return true;
+  }
+  return false;
+}
+function wildHit(w, dmg, by) {
+  if (w.st === 'dead') return;
+  w.hp = (w.hp ?? WHP[w.t]) - dmg; w.hurtT = 0.4;
+  if (w.hp > 0) { if (w.st === 'sleep' || w.st === 'idle' || w.st === 'walk') { w.st = 'back'; } return; }
+  w.st = 'dead'; w.t0 = 0;
+  const loot = w.t === 'vlk' ? { kozesiny: 2, maso: 3 } : { kozesiny: 4, maso: 15 };
+  for (const r in loot) addRes(r, loot[r]);
+  S.stats.beasts = (S.stats.beasts || 0) + 1;
+  log((w.t === 'vlk' ? 'Vlk' : 'Medvěd') + ' padl' + (by ? ' – ' + by : '') + '. Získáno ' + costPlain(loot) + '.');
+}
+function personHurt(p, dmg, w) {
+  p.hp = (p.hp ?? 100) - dmg; if (p.job !== 'lov' || p.hp < 30) p.flee = 10;   // lovec se brání, dokud není vážně zraněný
+  if (p.hp > 0) return;
+  S.people.splice(S.people.indexOf(p), 1); selP.delete(p.id);
+  log((w.t === 'vlk' ? 'Vlci roztrhali' : 'Medvěd zabil') + ' jednoho z osadníků! Postavte strážní věž a pošlete lovce.');
+  if (!S.people.length) showModal('over');
+}
+function spawnWild(t) {
+  for (let k = 0; k < 40; k++) {
+    const x = 3 + Math.floor(Math.random() * (N - 6)), y = 3 + Math.floor(Math.random() * (N - 6));
+    if (!wildOk(x, y) || occ.has(x + y * N) || Math.hypot(x - CX, y - CY) < 18 || nearTown(x, y, 14)) continue;
+    S.wild.push({ id: S.nid++, t, x: x + 0.5, y: y + 0.5, hx: x, hy: y, st: 'idle', t0: 3, dir: 1 }); return true;
+  }
+  return false;
+}
+function updWild(dt) {
+  if (!S.wild) return;
+  const night = isNight();
+  // od průmyslové doby zvěř z okolí města mizí, dřív se smečky pomalu obnovují
+  S.wildT = (S.wildT || 0) + dt;
+  if (S.age >= 3) {
+    if (S.wildT > 60 && S.wild.length) { S.wildT = 0; const i = S.wild.findIndex(w => w.st !== 'chase' && w.st !== 'attack'); if (i >= 0) { S.wild.splice(i, 1); if (!S.wildGone) { S.wildGone = 1; log('Divoká zvěř ustupuje před rostoucím městem.'); } } }
+  } else if (S.wildT > 300) {
+    S.wildT = 0;
+    if (S.wild.filter(w => w.st !== 'dead').length < 12) spawnWild(S.age >= 2 || Math.random() < 0.7 ? 'vlk' : 'medved');
+  }
+  if (S.attackAt && S.time - S.attackAt.t > 40) S.attackAt = null;
+  // strážní věže střílejí
+  for (const b of S.blds) {
+    const l = lvOf(b); if (!l.guard) continue;
+    for (const w of S.wild) if (w.st !== 'dead' && Math.hypot(w.x - b.x - 0.5, w.y - b.y - 0.5) < guardR(l)) wildHit(w, l.dmg * dt, 'strážní věž');
+  }
+  for (let wi = S.wild.length - 1; wi >= 0; wi--) {
+    const w = S.wild[wi], def = WILD[w.t];
+    if (w.hurtT) w.hurtT = Math.max(0, w.hurtT - dt);
+    if (w.st === 'dead') { w.t0 += dt; if (w.t0 > 6) S.wild.splice(wi, 1); continue; }
+    if (w.cd) w.cd = Math.max(0, w.cd - dt);
+    // honička a útok
+    if (w.st === 'chase' || w.st === 'attack') {
+      const p = S.people.find(q => q.id === w.pid);
+      w.t0 += dt;
+      if (!p || w.t0 > (w.t === 'vlk' ? 9 : 6) || Math.hypot(w.x - w.hx, w.y - w.hy) > 14 || safeAt(p.x, p.y)) { w.st = 'back'; w.cd = 45; continue; }
+      const dx = p.x - w.x, dy = p.y - w.y, d = Math.hypot(dx, dy);
+      w.dir = dx - dy >= 0 ? 1 : -1;
+      if (d > 0.45) {
+        w.st = 'chase';
+        const st = Math.min(d, def.sp * 2 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
+        if (wildOk(nx, ny)) { w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; } else { w.st = 'back'; w.cd = 20; }
+      } else {
+        w.st = 'attack'; w.at = (w.at || 0) + dt;
+        personHurt(p, WBITE[w.t] * dt, w);
+        wildHit(w, 2 * dt);   // napadený se brání holýma rukama
+        if (!S.attackAt || S.time - S.attackAt.t > 20) {
+          S.attackAt = { x: w.x, y: w.y, t: S.time };
+          log((w.t === 'vlk' ? 'Vlci napadli' : 'Medvěd napadl') + ' osadníka! Napadený utíká domů.');
+        }
+      }
+      continue;
+    }
+    if (w.st === 'back') {
+      const dx = w.hx + 0.5 - w.x, dy = w.hy + 0.5 - w.y, d = Math.hypot(dx, dy);
+      if (d < 0.3) { w.st = 'idle'; w.t0 = 3; continue; }
+      const st = Math.min(d, def.sp * 1.4 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
+      if (wildOk(nx, ny)) { w.x = nx; w.y = ny; } else { w.x = w.hx + 0.5; w.y = w.hy + 0.5; }
+      w.wd = (w.wd || 0) + st; w.dir = dx - dy >= 0 ? 1 : -1;
+      continue;
+    }
+    // hledá kořist: vlci hlavně v noci, medvěd když ho někdo vyruší u doupěte
+    if (!w.cd) {
+      const k = S.age >= 2 ? 0.7 : 1;
+      const R = (w.t === 'vlk' ? (night ? 5 : 2.5) : 3) * k * (w.st === 'sleep' ? 0.5 : 1);
+      let prey = null, pd = R;
+      for (const q of S.people) { const d = Math.hypot(q.x - w.x, q.y - w.y); if (d < pd && !safeAt(q.x, q.y)) { pd = d; prey = q; } }
+      if (prey) {
+        const pack = w.t === 'vlk' ? S.wild.filter(o => o.t === 'vlk' && o.st !== 'dead' && !o.cd && Math.hypot(o.x - w.x, o.y - w.y) < 6) : [w];
+        for (const o of pack) { o.st = 'chase'; o.pid = prey.id; o.t0 = 0; }
+        continue;
+      }
+    }
+    // medvěd v noci spí, vlci spí přes poledne a v noci jsou čilí
+    const ph = (S.time % DAY) / DAY, sleepy = w.t === 'medved' ? night : (ph > 0.25 && ph < 0.45);
+    if (sleepy && w.st !== 'sleep' && w.st !== 'walk') { w.st = 'sleep'; w.t0 = 0; }
+    if (w.st === 'sleep') { w.t0 += dt; if (!sleepy) { w.st = 'idle'; w.t0 = 1 + Math.random() * 2; } continue; }
+    if (w.st === 'idle') {
+      w.t0 -= dt;
+      if (w.t0 <= 0) {   // nový cíl kolem doupěte, ale ne k osadě
+        for (let k = 0; k < 8; k++) {
+          const tx = w.hx + 0.5 + (Math.random() * 2 - 1) * def.range, ty = w.hy + 0.5 + (Math.random() * 2 - 1) * def.range;
+          if (wildOk(tx, ty) && !nearTown(tx, ty, 9)) { w.tx = tx; w.ty = ty; w.st = 'walk'; break; }
+        }
+        if (w.st !== 'walk') w.t0 = 2;
+      }
+      continue;
+    }
+    if (w.st === 'walk') {
+      const dx = w.tx - w.x, dy = w.ty - w.y, d = Math.hypot(dx, dy);
+      if (d < 0.1) { w.st = 'idle'; w.t0 = 2 + Math.random() * 5; continue; }
+      const st = Math.min(d, def.sp * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
+      if (!wildOk(nx, ny)) { w.st = 'idle'; w.t0 = 1; continue; }
+      w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; w.dir = dx - dy >= 0 ? 1 : -1;
+    }
+  }
+}
+function drawWild(w, T) {
+  const [x, y] = iso(w.x, w.y), def = WILD[w.t];
+  shadow(x, y, w.t === 'vlk' ? 9 : 12);
+  let ok;
+  if (w.st === 'dead') {
+    ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, (6 - w.t0) / 2));
+    ok = animFrame(w.t === 'medved' ? 'medved_smrt' : 'vlk_spani', w.t === 'medved' ? Math.min(7, Math.floor(w.t0 * 4)) : 7, x, y + 4, def.h, w.dir < 0);
+    ctx.restore(); return;
+  }
+  if (w.st === 'attack') ok = animFrame(w.t + '_utok', Math.floor(T * 10 + w.id), x, y + 4, def.h, w.dir < 0);
+  else if (w.hurtT && w.t === 'medved') ok = animFrame('medved_zraneni', Math.floor((0.4 - w.hurtT) * 20), x, y + 4, def.h, w.dir < 0);
+  else if (w.st === 'chase' || w.st === 'back') ok = animFrame(w.t === 'medved' ? 'medved_beh' : 'vlk_chuze', Math.floor((w.wd || 0) * 6), x, y + 4, def.h, w.dir < 0);
+  else if (w.st === 'sleep') ok = animFrame(w.t + '_spani', Math.min(7, Math.floor(w.t0 * 3)), x, y + 4, def.h, w.dir < 0);
+  else if (w.st === 'walk') ok = animFrame(w.t + '_chuze', Math.floor((w.wd || 0) * (w.t === 'vlk' ? 7 : 6)), x, y + 4, def.h, w.dir < 0);
+  else ok = animFrame(w.t + '_chuze', 0, x, y + 4, def.h, w.dir < 0);
+  if (!ok) ell(x, y - 6, w.t === 'vlk' ? 8 : 11, 5, w.t === 'vlk' ? '#6a6a66' : '#6a4a2a');
+  if (w.hp !== undefined && w.hp < WHP[w.t]) { const k = Math.max(0, w.hp / WHP[w.t]); ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(x - 10, y - def.h + 2, 20, 3.5); ctx.fillStyle = '#e04030'; ctx.fillRect(x - 9.5, y - def.h + 2.5, 19 * k, 2.5); }
+}
+
 /* ---------- simulace ---------- */
 function update(dt) {
   S.time += dt;
@@ -731,21 +912,29 @@ function update(dt) {
       while (S.needAcc[nd.r] >= 1) { if (S.res[nd.r] >= 1) { S.res[nd.r]--; S.needAcc[nd.r]--; } else { S.needAcc[nd.r] = 0; } }
       if (S.res[nd.r] < 1) miss.push(nd.r);
     }
-    if (miss.length && S.time - (S.fullT.needs || -99) > 60) { S.fullT.needs = S.time; log('Lidem chybí ' + miss.map(r => RES[r][1].toLowerCase()).join(', ') + '. Dokud to nebude, osada neporoste.'); }
+    if (S.age >= 1) {   // pestrá strava
+      if (S.res.maso < 1 && S.res.ryby < 1) miss.push('maso');
+      if (S.res.obili < 1 && S.res.chleb < 1 && S.res.bobule < 1) miss.push('obili');
+    }
+    if (miss.length && S.time - (S.fullT.needs || -99) > 60) { S.fullT.needs = S.time; log('Lidem chybí ' + miss.map(missName).join(', ') + '. Dokud to nebude, osada neporoste.'); }
     S.missing = miss;
   }
-  S.debt += S.people.length * dt / 40 * (1 + 0.25 * Math.min(S.age, 4));   // v pozdějších věcích lidé jedí víc
+  S.debt += S.people.length * dt / 30 * (1 + 0.35 * Math.min(S.age, 5));   // v pozdějších věcích lidé jedí víc
   if (S.age >= 1) {   // a topí dřevem
     S.heat = (S.heat || 0) + S.people.length * dt / 400 * Math.min(S.age, 3);
     while (S.heat >= 1) { S.heat--; if (S.res.klacky >= 1) S.res.klacky--; else if (S.age >= 3 && S.res.uhli > (S.keep.uhli || 0)) S.res.uhli--; }   // topí se dřevem, uhlím jen když dřevo dojde (zásobu uhlí nechá)
   }
-  // lidé jedí to, čeho je nejvíc – zásoby ubývají rovnoměrně a žádné jídlo nezmizí jako první
+  // lidé jedí střídavě z každé skupiny jídla (od starověku maso/ryby a obilí/chléb), v rámci skupiny to, čeho je nejvíc
+  const groups = foodGroups(), nut = { chleb: 2.5, maso: S.age || S.fire.lit ? 1.5 : 1, ryby: S.age || S.fire.lit ? 1.5 : 1, obili: 1, bobule: 1 };
   while (S.debt >= 1) {
     let best = null;
-    for (const r of ['chleb', 'maso', 'ryby', 'obili', 'bobule']) if (S.res[r] >= 1 && (!best || S.res[r] > S.res[best])) best = r;
+    for (let gi = 0; gi < groups.length && !best; gi++) {
+      const g = groups[((S.dietTurn || 0) + gi) % groups.length];
+      for (const r of g) if (S.res[r] >= 1 && (!best || S.res[r] > S.res[best])) best = r;
+    }
     if (!best) { S.debt = 1; break; }
-    S.res[best]--;
-    S.debt -= best === 'chleb' ? 3 : (best === 'maso' || best === 'ryby') ? (S.fire.lit ? 2 : 1) : 1;
+    S.dietTurn = ((S.dietTurn || 0) + 1) % groups.length;
+    S.res[best]--; S.debt -= nut[best];
   }
   // zdraví: hlad a zima ubírají, v teple a sytosti se lidé uzdravují
   const hungry = S.debt >= 1;
@@ -770,7 +959,7 @@ function update(dt) {
       S.unhappy = 60;
       const n = Math.max(1, Math.floor(S.people.length / 30));
       for (let i = 0; i < n && S.people.length > 5; i++) { const q = S.people.pop(); selP.delete(q.id); }
-      log((n > 1 ? n + ' lidí se odstěhovalo' : 'Jedna rodina se odstěhovala') + ' – chybí jim ' + S.missing.map(r => RES[r][1].toLowerCase()).join(', ') + '.');
+      log((n > 1 ? n + ' lidí se odstěhovalo' : 'Jedna rodina se odstěhovala') + ' – chybí jim ' + S.missing.map(missName).join(', ') + '.');
     }
   }
 
@@ -779,7 +968,7 @@ function update(dt) {
   const foodVal = S.res.bobule + S.res.obili + (S.res.maso + S.res.ryby) * 2 + S.res.chleb * 3;
   S.growWhy = S.people.length >= popCap() ? 'Není kde bydlet – postavte domy.'
     : !S.fire.lit ? 'Je zima – rozdělejte oheň.'
-    : (S.missing && S.missing.length) ? 'Lidem chybí: ' + S.missing.map(r => RES[r][1].toLowerCase()).join(', ') + '.' + missWhy(S.missing[0])
+    : (S.missing && S.missing.length) ? 'Lidem chybí: ' + S.missing.map(missName).join(', ') + '.' + missWhy(S.missing[0])
     : foodVal < S.people.length ? 'Málo jídla v zásobě (potřeba aspoň ' + S.people.length + ').' : '';
   S.grow += dt;
   if (S.grow >= 30) {
@@ -844,6 +1033,10 @@ function update(dt) {
         else if (droneFed(b)) addRes(r, n);   // drony odnášejí samy
         else { b.stock = b.stock || {}; b.stock[r] = (b.stock[r] || 0) + n; }   // čeká u stavby, lidé to odnesou
       }
+      if (b.type === 'ryby' && S.age <= 1 && Math.random() < 0.15) {   // na břehu se občas najde mušle
+        b.stock = b.stock || {}; b.stock.musle = (b.stock.musle || 0) + 1;
+        if (!S.stats.shellFound) { S.stats.shellFound = 1; log('Rybáři našli na břehu mušli! Občas nějakou přinesou.'); }
+      }
       if (node && node.amt < 1) removeNode(node);
       if (o0 === 'nastroje') S.stats.tools++;
     }
@@ -898,6 +1091,8 @@ function update(dt) {
   updExped(dt);
   updTrains(dt);
   updFlight(dt);
+  updWild(dt);
+  towerReveal();
 
   // příběh
   while (OBJ[S.obj].c()) { S.obj++; log('Splněno! Nový úkol.'); }
@@ -907,6 +1102,8 @@ function update(dt) {
 // zboží se začne vyžadovat, až jde vyrábět (po příslušném výzkumu)
 const NEEDS = [{ age: 1, r: 'keramika', per: 0.1, tech: 'hrncirstvi' }, { age: 2, r: 'prkna', per: 0.08, tech: 'tesarstvi' }, { age: 3, r: 'stroje', per: 0.02, tech: 'stroje' }, { age: 4, r: 'plasty', per: 0.05, tech: 'ropa' }, { age: 4, r: 'elektronika', per: 0.03, tech: 'elektronika' }, { age: 5, r: 'kompozity', per: 0.03, tech: 'nano' }];
 const needOn = nd => S.age >= nd.age && S.research.done[nd.tech];
+const missName = r => S.age >= 1 && r === 'maso' ? 'maso nebo ryby' : S.age >= 1 && r === 'obili' ? 'obilí nebo chléb' : RES[r][1].toLowerCase();
+const foodGroups = () => S.age >= 1 ? [['maso', 'ryby'], ['chleb', 'obili', 'bobule']] : [['chleb', 'maso', 'ryby', 'obili', 'bobule']];
 // moderní továrny bez dostatku proudu skoro stojí
 const NEED_POWER = { rafinerie: 1, elektro: 1, nanotovarna: 1, robotovarna: 1, ropny_vrt: 1, vfarma: 1 };
 // proč se chybějící zboží nevyrábí (první dílna, která ho dělá a stojí)
@@ -1157,6 +1354,21 @@ function updPerson(p, dt) {
   p.mv = false;
   const tile = terr[Math.floor(p.x) + Math.floor(p.y) * N];
   const slow = (S.cold ? 0.55 : 1), sp = 1.2 * slow * (tile === T_WATER ? 0.55 : 1) * (roadSet.has(Math.floor(p.x) + Math.floor(p.y) * N) ? 1.6 : 1);
+  if (p.flee > 0 || S.alarm) {   // napadený utíká domů, při poplachu se schovají všichni
+    if (p.flee > 0) p.flee -= dt;
+    const h = storeNear(p.x, p.y); p.fishing = false; if (p.boat) { p.boat = false; p.x = h.x + 0.5; p.y = h.y + 0.86; }
+    goTo(p, h.x + 0.5 + ((p.id % 5) - 2) * 0.2, h.y + 0.9 + (p.id % 3) * 0.2, sp * (p.flee > 0 ? 1.6 : 1), dt);
+    return;
+  }
+  if (p.job === 'lov' && S.wild) {   // lovci jdou na zvěř, která útočí nebo je blízko
+    let a = null, ad = 1e9;
+    for (const w of S.wild) { if (w.st === 'dead') continue; const d = Math.hypot(w.x - p.x, w.y - p.y), hostile = w.st === 'chase' || w.st === 'attack' || w.cd > 0; if ((hostile && d < 14) || d < 4) if (d < ad) { ad = d; a = w; } }
+    if (a) {
+      if (ad > 0.9) goTo(p, a.x, a.y, sp * 1.15, dt);
+      else { p.act = true; p.dir = a.x - p.x - (a.y - p.y) >= 0 ? 1 : -1; wildHit(a, 10 * dt * (S.research.done.bronz ? 1.3 : 1) * (S.research.done.zelezo ? 1.5 : 1), 'ulovili ho lovci'); }
+      return;
+    }
+  }
   if (!p.job && S.site && !p.hold) { setJob(p, 'stavba'); return; }   // volní lidé jdou sami stavět (kromě odvolaných)
   if (!p.job) { if (p.tx != null) goTo(p, p.tx, p.ty, sp, dt); return; }
   if (p.job === 'stavba') {
@@ -1180,7 +1392,7 @@ function updPerson(p, dt) {
       case 'sail': p.boat = true; if (moveTo(p, w.fx, w.fy, sp, dt)) { p.st = 'fish'; p.t = 0; } break;
       case 'fish':
         p.act = true; p.fishing = true; p.dir = w.dx - w.dy >= 0 ? 1 : -1; p.t += dt * slow;
-        if (p.t >= (boat ? 10 : 12)) { p.carry = { ryby: boat ? 5 : 2 }; p.fishing = false; p.st = boat ? 'ret' : 'drop'; }
+        if (p.t >= (boat ? 12 : 15)) { p.carry = { ryby: boat ? 4 : 2 }; p.fishing = false; p.st = boat ? 'ret' : 'drop'; }
         break;
       case 'ret': if (moveTo(p, hx, hy, sp, dt)) { p.boat = false; p.st = 'drop'; } break;
       case 'drop': addRes('ryby', p.carry ? p.carry.ryby : 0); p.carry = null; p.st = 'toShore'; break;
@@ -1308,8 +1520,8 @@ function plantSpot(b, r) {
   return cand[Math.floor(Math.random() * cand.length)];
 }
 function loadCarry(p, type) {
-  // z lovu dvojnásob masa, kožešina jen z každé druhé výpravy
-  if (type === 'zver') { S.hideT = (S.hideT || 0) + 1; p.carry = { maso: p.n * 2, kozesiny: S.hideT % 2 }; }
+  // z lovu půldruhého masa, kožešina jen z každé druhé výpravy
+  if (type === 'zver') { S.hideT = (S.hideT || 0) + 1; p.carry = { maso: Math.round(p.n * 1.5), kozesiny: S.hideT % 2 }; }
   else p.carry = { [NODE[type].res]: p.n };
 }
 function removeNode(n) {
@@ -1830,14 +2042,14 @@ const IMG = {};
 ['jeskyne', 'ohniste', 'chyse1', 'chyse2', 'chyse3', 'jama1', 'jama2', 'dilna1', 'dilna2', 'drevo1', 'drevo2', 'lom1', 'lom2', 'lovec1', 'lovec2',
  'ryby1', 'ryby2', 'skala1', 'skala2', 'staveniste', 'strom1', 'strom2', 'strom3', 'ker', 'kamen', 'pazourek', 'zver', 'clun',
  'chyse4', 'hrncir1', 'hrncir2', 'sypka1', 'sypka2', 'skolka1', 'skolka2', 'ohrada1', 'ohrada2', 'smeniste1', 'smeniste2',
- 'tavirna1', 'tavirna2', 'kovarna1', 'hlina', 'ruda', 'osel', 'hlavni2', 'hlavni3', 'clovek_chuze', 'clovek_prace', 'jelen_chuze',
+ 'tavirna1', 'tavirna2', 'kovarna1', 'hlina', 'ruda', 'osel', 'hliniste1', 'hliniste2', 'straz1', 'straz2', 'rybar_lod', 'vlk_chuze', 'vlk_utok', 'vlk_spani', 'medved_chuze', 'medved_beh', 'medved_utok', 'medved_zraneni', 'medved_smrt', 'medved_spani', 'hlavni2', 'hlavni3', 'clovek_chuze', 'clovek_prace', 'jelen_chuze',
  'hlavni4', 'chyse5', 'dilna3', 'smeniste3', 'pila1', 'pila2', 'sklad1', 'mlyn1', 'pekarna1', 'hut1', 'klaster1', 'zelruda',
  'kupec_chuze', 'pocestny_chuze', 'pole_mlade', 'pole_zrale', 'vuz', 'uhli', 'dul_uhli1', 'dul_zelezo1', 'cihelna1', 'ocelarna1', 'strojirna1', 'chyse6', 'hlavni5', 'ropa', 'elektrarna1', 'ropny_vrt1', 'rafinerie1', 'elektro1', 'nadrazi1', 'letiste1', 'chyse7', 'hlavni6', 'hut2', 'drevo3', 'lom3', 'svatyne1', 'svatyne2', 'svatyne3', 'fuze_reaktor1', 'dronport1', 'nanotovarna1', 'robotovarna1', 'vfarma1', 'vytah1', 'chyse8',
  'kupec3_chuze', 'kupec4_chuze', ...[0, 1, 2, 3, 4, 5].flatMap(a => ['chuze', 'seka', 'kope', 'sklizen', 'remeslo'].map(k => 'clovek' + a + '_' + k))].forEach(n => {
   const i = new Image(); i.onload = () => { i.ok = true; }; i.onerror = () => { i.bad = true; }; i.src = 'img/s/' + n + '.png'; IMG[n] = i;
 });
 // [šířka ve hře, o kolik spodek obrázku přesahuje pod střed dlaždice]
-const SPR_B = { jeskyne: [150, 30], ohniste: [46, 12], chyse1: [58, 15], chyse2: [66, 17], chyse3: [72, 19], jama1: [50, 13], jama2: [56, 15],
+const SPR_B = { straz1: [76, 19], straz2: [78, 19], hliniste1: [92, 22], hliniste2: [124, 30], jeskyne: [150, 30], ohniste: [46, 12], chyse1: [58, 15], chyse2: [66, 17], chyse3: [72, 19], jama1: [50, 13], jama2: [56, 15],
   dilna1: [70, 18], dilna2: [76, 20], drevo1: [74, 19], drevo2: [80, 20], lom1: [78, 20], lom2: [82, 21], lovec1: [72, 18], lovec2: [80, 20],
   ryby1: [72, 18], ryby2: [86, 22], skala1: [52, 13], skala2: [60, 15],
   chyse4: [74, 19], hrncir1: [84, 21], hrncir2: [94, 23], sypka1: [56, 15], sypka2: [80, 20], skolka1: [84, 21], skolka2: [92, 23],
@@ -2027,6 +2239,14 @@ function drawPerson(p, T, trader) {
   const walk = p.mv ? Math.sin(T * 9 + p.id) : 0, work = (!p.mv && p.act) ? Math.sin(T * 7 + p.id) : 0, bob = p.mv ? Math.abs(walk) * 1.2 : 0;
   const skin = ['#e0ad7f', '#cf9565', '#b87e4e'][p.skin || 0], hair = ['#2b1d0e', '#4a321c', '#6e4a26'][p.id % 3], out = '#2e1d0c';
   const band = trader ? '#c9a23a' : (p.job ? JOBS[p.job].color : null), job = trader ? 'trader' : p.job;
+  if (p.boat && IMG.rybar_lod.ok) {
+    const bob2 = Math.sin(T * 2 + p.id) * 1.2;
+    ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(x, y + 5, 19 + Math.sin(T * 3 + p.id), 4, 0, 0, 7); ctx.fill();
+    if (selP.has(p.id)) { ctx.beginPath(); ctx.ellipse(x, y + 4, 20, 6, 0, 0, 7); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke(); }
+    animFrame('rybar_lod', 0, x, y + 7 + bob2, 42, d > 0);
+    hpBar(p, x, y - 40);
+    return;
+  }
   if (p.boat) { if (!spr('clun', x, y, 36, 8)) poly([x - 13, y - 3, x + 13, y - 3, x + 9, y + 4, x - 9, y + 4], '#7a5a34', '#3f2a14'); ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x - 15, y + 5, 30, 1.2); }
   else shadow(x, y, 6.5);
   if (!trader && selP.has(p.id)) { ctx.beginPath(); ctx.ellipse(x, y, 10, 5, 0, 0, 7); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke(); }
@@ -2463,6 +2683,19 @@ function drawBld2(b, T, x, y) {
     ctx.fillStyle = '#d9c070'; ctx.fillRect(x + 25, y - 86, 2, 12); ctx.fillRect(x + 21, y - 82, 10, 2);
     for (let i = 0; i < 3; i++) poly([x - 36 + i * 10, y + 2 + i * 5, x - 36 + i * 10, y - 8 + i * 5, x - 32 + i * 10, y - 6 + i * 5, x - 32 + i * 10, y + 4 + i * 5], '#3a4a6a');
     poly([x - 4, y + 22, x - 4, y + 8, x + 4, y + 4, x + 4, y + 18], '#3a2412');
+  } else if (t === 'straz') {                        // strážní věž: dřevěná, později kamenná
+    shadow(x, y + 4, 16);
+    if (lv === 1) {
+      ctx.fillStyle = '#5b3a1c'; for (const dx of [-9, 9]) ctx.fillRect(x + dx - 1.5, y - 40, 3, 44); ctx.fillRect(x - 1.5, y - 36, 3, 42);
+      ctx.strokeStyle = '#4a2e14'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 9, y); ctx.lineTo(x + 9, y - 30); ctx.moveTo(x + 9, y); ctx.lineTo(x - 9, y - 30); ctx.stroke();
+      isoBox(x, y - 38, 13, 6, '#8a5a2b', '#6e4422', '#a8743e');
+      poly([x - 15, y - 44, x, y - 62, x + 15, y - 44, x, y - 38], '#c9a456', '#5a3b1a');
+    } else {
+      isoBox(x, y + 2, 11, 44, '#b0a898', '#8e8678', '#c8c0b0');
+      isoBox(x, y - 42, 14, 6, '#a09888', '#7e776a', '#bdb5a5');
+      poly([x - 16, y - 48, x, y - 66, x + 16, y - 48, x, y - 42], '#9a3a2a', '#4a1a12');
+    }
+    ctx.fillStyle = '#e8d070'; ctx.fillRect(x - 2, y - 52, 4, 5);   // strážný
   } else if (t === 'hliniste') {
     ell(x, y + 2, 28, 13, '#6e4426'); ell(x, y + 3, 21, 9, '#4a2c16');
     ell(x + 4, y + 5, 9, 3.6, `rgba(120,160,190,${0.5 + 0.1 * Math.sin(T)})`);
@@ -2760,6 +2993,7 @@ function render(T) {
   for (const n of S.nodes) if (rev[n.x + n.y * N] && vis(n.x, n.y)) items.push([n.x + n.y + 1, 0, n]);
   for (const b of S.blds) items.push([b.x + b.y + 1, 1, b]);
   for (const p of S.people) items.push([p.x + p.y, 2, p]);
+  if (S.wild) for (const w of S.wild) if (rev[Math.floor(w.x) + Math.floor(w.y) * N] && vis(w.x, w.y)) items.push([w.x + w.y, 6, w]);
   if (S.trader && rev[Math.floor(S.trader.x) + Math.floor(S.trader.y) * N]) items.push([S.trader.x + S.trader.y, 3, S.trader]);
   for (const t of S.trains) if (t.pos) items.push([t.pos[0][0] + t.pos[0][1], 5, t]);
   if (S.exped && S.exped.st !== 'away' && rev[Math.floor(S.exped.x) + Math.floor(S.exped.y) * N]) items.push([S.exped.x + S.exped.y, 4, S.exped]);
@@ -2768,6 +3002,7 @@ function render(T) {
     if (it[1] === 0) drawNode(it[2], T); else if (it[1] === 1) { drawBld(it[2], T); if (it[2].stock) drawStock(it[2]); }
     else if (it[1] === 4) drawCaravan(it[2], T);
     else if (it[1] === 5) drawTrain(it[2]);
+    else if (it[1] === 6) drawWild(it[2], T);
     else drawPerson(it[2], T, it[1] === 3);
   }
   if (S.site) siteBar(S.site);
@@ -2780,16 +3015,23 @@ function render(T) {
   if (a > 0) {
     lctx.globalCompositeOperation = 'source-over'; lctx.clearRect(0, 0, W, H);
     lctx.fillStyle = `rgba(8,12,45,${0.58 * a})`; lctx.fillRect(0, 0, W, H);
+    const lights = [];
     const f = S.blds.find(b => b.type === 'ohniste');
-    if (f && S.fire.lit) {
+    if (f && S.fire.lit) lights.push([f, 230]);
+    const main = S.blds.find(b => b.type === 'jeskyne');
+    if (S.age >= 1 && main) lights.push([main, 300 + S.age * 25]);   // od starověku svítí hlavní budova (lampy, později elektřina)
+    for (const o of S.blds) { const l = lvOf(o); if (l.guard) lights.push([o, guardR(l) * TW * 0.75, 0.9]); }   // strážní věže svítí daleko
+    if (S.age >= 1) for (const o of S.blds) if (o !== main && o !== f && o.type !== 'pole' && !lvOf(o).guard) lights.push([o, 95 + S.age * 10, 0.55]);   // ostatní stavby svítí slaběji
+    for (const [f, R, k = 1] of lights) {
       const [wx, wy] = iso(f.x + 0.5, f.y + 0.5);
-      const sx = (wx - cam.x) * cam.z + W / 2, sy = (wy - cam.y) * cam.z + H / 2, r = (230 + Math.sin(T * 8) * 8) * cam.z;
+      const sx = (wx - cam.x) * cam.z + W / 2, sy = (wy - cam.y) * cam.z + H / 2, r = (R + Math.sin(T * 8 + f.id) * (S.age >= 3 ? 0 : R / 30)) * cam.z;
+      if (sx < -r || sy < -r || sx > W + r || sy > H + r) continue;   // mimo obrazovku
       const g = lctx.createRadialGradient(sx, sy, 0, sx, sy, r);
-      g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.5, 'rgba(0,0,0,.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      g.addColorStop(0, `rgba(0,0,0,${k})`); g.addColorStop(0.5, `rgba(0,0,0,${0.6 * k})`); g.addColorStop(1, 'rgba(0,0,0,0)');
       lctx.globalCompositeOperation = 'destination-out'; lctx.fillStyle = g; lctx.fillRect(sx - r, sy - r, r * 2, r * 2);
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       const g2 = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 0.8);
-      g2.addColorStop(0, `rgba(255,150,40,${0.22 * a})`); g2.addColorStop(1, 'rgba(255,150,40,0)');
+      g2.addColorStop(0, `rgba(255,150,40,${0.22 * a * k})`); g2.addColorStop(1, 'rgba(255,150,40,0)');
       ctx.fillStyle = g2; ctx.fillRect(sx - r, sy - r, r * 2, r * 2);
     }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -2813,7 +3055,7 @@ const TOPRES = [
 // skupiny staveb ve spodní liště
 const CATS = [['dum', '🏠', 'Bydlení a sklady'], ['jidlo', '🌾', 'Jídlo'], ['surov', '⛏️', 'Suroviny'], ['vyroba', '🏭', 'Výroba a energie'], ['ost', '🏛️', 'Obchod, vzdělání a doprava']];
 const CAT_OF = { chyse: 'dum', jama: 'dum', sypka: 'dum', sklad: 'dum',
-  ohniste: 'jidlo', pole: 'jidlo', ohrada: 'jidlo', lovec: 'jidlo', ryby: 'jidlo', mlyn: 'jidlo', pekarna: 'jidlo', vfarma: 'jidlo',
+  straz: 'ost', ohniste: 'jidlo', pole: 'jidlo', ohrada: 'jidlo', lovec: 'jidlo', ryby: 'jidlo', mlyn: 'jidlo', pekarna: 'jidlo', vfarma: 'jidlo',
   drevo: 'surov', lom: 'surov', hliniste: 'surov', skolka: 'surov', dul_uhli: 'surov', dul_zelezo: 'surov', ropny_vrt: 'surov' };
 const catOf = t => CAT_OF[t] || (['skala', 'svatyne', 'smeniste', 'klaster', 'nadrazi', 'letiste', 'dronport', 'vytah'].includes(t) ? 'ost' : 'vyroba');
 const perkCost = () => Math.round(800 * Math.pow(1.6, S.perk || 0));
@@ -2843,6 +3085,8 @@ function renderUI() {
   h += `<span class="sp"></span>`;
   { const rc = S.research.cur; h += `<button data-a="research" class="${rc ? 'on' : ''}">${rc ? '🔬 ' + TECH[rc.id].name + ' ' + Math.floor(rc.t / TECH[rc.id].time * 100) + ' %' : '🌳 Technologie'}</button>`; }
   [[0, '⏸'], [1, '1×'], [2, '2×'], [4, '4×']].forEach(s => h += `<button data-a="speed" data-v="${s[0]}" class="${S.speed === s[0] ? 'on' : ''}">${s[1]}</button>`);
+  if (S.wild && S.wild.length) h += `<button data-a="alarm" class="${S.alarm ? 'on' : ''}" title="Poplach: všichni se schovají u skladů. Klikněte znovu a vrátí se do práce.">🔔${S.alarm ? ' Poplach!' : ''}</button>`;
+  if (S.attackAt) h += `<button data-a="gotoAttack" style="color:#a01010;font-weight:bold" title="Ukázat místo útoku">📍 Útok!</button>`;
   h += `<button data-a="mute" title="${SET.mute ? 'Zapnout zvuk' : 'Ztlumit zvuk'}">${SET.mute ? '🔇' : '🔊'}</button><button data-a="save">💾 Uložit</button><button data-a="menu">☰ Hra</button>`;
   $('top').innerHTML = h;
   { const tp = $('top').offsetHeight + 8 + 'px'; $('left').style.top = tp; $('right').style.top = tp; }
@@ -2928,12 +3172,7 @@ function renderUI() {
     }
     if (l.farm) h += `<div class="hint">Jedna sklizeň: ${costPlain(l.farm.out)}.</div>`;
     if (l.trade) h += `<div class="hint">Kupci chodí častěji a nabízejí ${4 + l.trade * 2} druhy zboží.</div>`;
-    if (b.type === 'smeniste') {
-      h += `<div class="hint"><b>Nákup</b> – po 10 kusech (máte 🪙${Math.floor(S.res.mince)}):</div><div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${BUYABLE[Math.min(S.age, 5)].map(r => `<button data-a="buy" data-v="${r}" class="${S.res.mince >= buyPrice(r) && S.res[r] + 10 <= storeCap() ? '' : 'off'}" title="Koupit 10 ${RES[r][1].toLowerCase()}">🪙${buyPrice(r)}→${RES[r][0]}10</button>`).join('')}</div>`;
-      const list = Object.keys(VAL).filter(r => Math.floor(S.res[r]) - (S.keep[r] || 0) >= 10);
-      h += `<div class="hint"><b>Prodej přebytků</b> – po 10 kusech, nastavená zásoba zůstane:</div>`;
-      h += list.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${list.map(r => `<button data-a="sell" data-v="${r}" title="Prodat 10 ${RES[r][1].toLowerCase()}">${RES[r][0]}10→🪙${sellPrice(r)}</button>`).join('')}</div>` : `<div class="hint">Zatím nemáte nic navíc.</div>`;
-    }
+    if (b.type === 'smeniste') h += `<div style="margin-top:6px"><button data-a="market">🏪 Otevřít tržiště – nákup a prodej</button></div>`;
     if (l.power) h += `<div class="hint">${b.on ? '⚡ Vyrábí proud.' : '<span class="lack">' + (b.lack || 'Stojí.') + '</span>'} Uhlí v zásobníku: ${b.buf && b.buf.uhli || 0}. Celkem proudu: ${S.powerCap} / spotřeba továren ${S.powerUse}${S.powerOk ? ' – stačí.' : ' – <span class="lack">nestačí, postavte další elektrárnu.</span>'}</div>`;
     if (b.type === 'nadrazi') {
       const tr = S.trains.find(t => t.at === b.id || t.to === b.id);
@@ -2957,7 +3196,7 @@ function renderUI() {
       const food = S.people.length * 60 / 40 * (1 + 0.25 * Math.min(S.age, 4)), wood = S.people.length * 60 / 400 * Math.min(S.age, 3);
       const goods = NEEDS.filter(needOn).map(nd => `${RES[nd.r][0]} ${RES[nd.r][1].toLowerCase()} asi ${Math.max(1, Math.round(S.people.length * nd.per))}`);
       h += `<div class="hint">Spotřeba za minutu: jídlo asi ${Math.round(food)}${wood ? `, ${S.age >= 3 ? 'dřevo (bez dřeva uhlí)' : 'dřevo'} na topení asi ${Math.round(wood)}` : ''}${goods.length ? ', ' + goods.join(', ') : ''}.</div>`;
-      if (S.missing && S.missing.length) h += `<div class="hint lack">Chybí: ${S.missing.map(r => RES[r][1].toLowerCase()).join(', ')} – osada neroste.</div>`;
+      if (S.missing && S.missing.length) h += `<div class="hint lack">Chybí: ${S.missing.map(missName).join(', ')} – osada neroste.</div>`;
       if (S.age >= 1) h += `<div style="margin-top:4px"><button data-a="invite" class="${S.res.mince >= 30 && S.people.length + 2 <= popCap() ? '' : 'off'}">👥 Pozvat 2 osadníky – 🪙30</button>${S.people.length + 2 > popCap() ? ' <small class="lack">Není kde bydlet.</small>' : ''}</div>`;
     }
     if (b.type === 'jeskyne') h += `<div class="hint">Bydlí tu ${6 + (l.pop || 0)} lidí. Sklad ${60 + (l.store || 0)}.</div><button data-a="research">🌳 Technologie</button>`;
@@ -3067,10 +3306,25 @@ function showModal(kind) {
       <p>Ages of Ember – od ohně ke hvězdám. <b>Příběh je u konce</b>. Děkujeme za hru! Město můžete dál rozvíjet, uložená hra zůstane.</p>
       <p class="hint">Za ${dayNo()} dní, ${S.people.length} obyvatel.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat ve hře</button></div>`;
+  } else if (kind === 'market') {
+    const cap = storeCap(), buy = BUYABLE[Math.min(S.age, 5)];
+    h = `<h3>🏪 Tržiště</h3><div class="hint" style="margin-top:0">Nakupuje a prodává se po 10 kusech. Máte <b>🪙 ${Math.floor(S.res.mince)}</b>. Prodá se jen to, co je nad nastavenou zásobou.</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:14px"><tr style="text-align:left;border-bottom:1px solid #8a6a3a"><th>Surovina</th><th>Sklad</th><th>Koupit 10</th><th>Prodat 10</th></tr>`;
+    for (const r of ageRes()) {
+      if (!VAL[r] || UNCAPPED[r]) continue;
+      const v = Math.floor(S.res[r]), canB = buy.includes(r), canS = v - (S.keep[r] || 0) >= 10;
+      h += `<tr style="border-bottom:1px solid rgba(138,106,58,.3)${v ? '' : ';opacity:.6'}"><td>${RES[r][0]} ${RES[r][1]}</td><td>${v}/${cap}</td>
+        <td>${canB ? `<button data-a="buy" data-v="${r}" class="${S.res.mince >= buyPrice(r) && v + 10 <= cap ? '' : 'off'}">🪙${buyPrice(r)}</button>` : '<small>–</small>'}</td>
+        <td><button data-a="sell" data-v="${r}" class="${canS ? '' : 'off'}">+🪙${sellPrice(r)}</button></td></tr>`;
+    }
+    h += `</table><div class="hint">Šedé tlačítko: chybí mince, sklad je plný, nebo nemáte 10 kusů navíc. „–“ znamená, že kupci tuto surovinu v této době nevozí.</div><div style="text-align:right;margin-top:8px"><button data-a="close">Zavřít</button></div>`;
   } else if (kind === 'store') {
     const cap = storeCap();
     h = `<h3>📦 Sklad – pojme ${cap} od každé suroviny</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px 12px">`;
-    for (const r in RES) { const v = Math.floor(S.res[r]); if (!v) continue; const full = !UNCAPPED[r] && v >= cap; h += `<div${full ? ' class="lack"' : ''}>${RES[r][0]} ${RES[r][1]}: <b>${v}</b>${full ? ' (plno)' : ''}</div>`; }
+    for (const r of ageRes()) {
+      const v = Math.floor(S.res[r]), full = !UNCAPPED[r] && v >= cap;
+      h += `<div${full ? ' class="lack"' : ''} style="${v ? '' : 'opacity:.45'}">${RES[r][0]} ${RES[r][1]}: <b>${v}</b>${UNCAPPED[r] ? '' : '/' + cap}${full ? ' (plno)' : ''}</div>`;
+    }
     h += `</div><div class="hint">Přebytky prodáte a chybějící zboží koupíte na tržišti. Větší sklad dají zásobní jámy, sýpky a skladiště.</div><div style="text-align:right;margin-top:8px"><button data-a="close">Zavřít</button></div>`;
   } else if (kind === 'over') {
     h = `<h3>Kmen vymřel</h3><p>Poslední z kmene podlehl hladu. Jeskyně osiřela.</p><div style="text-align:right"><button data-a="newYes">Začít znovu</button></div>`;
@@ -3098,12 +3352,14 @@ function act(a, v) {
     case 'speed': S.speed = +v; break;
     case 'save': saveGame(); toast('Hra uložena.'); break;
     case 'menu': showModal('menu'); break;
+    case 'alarm': S.alarm = !S.alarm; toast(S.alarm ? 'Poplach! Lidé se schovávají u skladů.' : 'Konec poplachu – lidé se vrací do práce.'); break;
+    case 'gotoAttack': if (S.attackAt) { const [ax, ay] = iso(S.attackAt.x, S.attackAt.y); cam.x = ax; cam.y = ay; } break;
     case 'saves': showModal('saves'); return;
     case 'close': closeModal(); break;
     case 'research': showModal('research'); break;
     case 'trade': showModal('trade'); break;
     case 'job+': { const q = S.people.find(p => !p.job); if (q && !jobLocked(v) && S.people.filter(p => p.job === v).length < jobMax(v) && (v !== 'stavba' || S.site)) setJob(q, v); break; }
-    case 'job-': { const q = S.people.filter(p => p.job === v).pop(); if (q) { setJob(q, null); q.hold = true; } break; }
+    case 'job-': { const q = S.people.filter(p => p.job === v).pop(); if (q) { if (S.site && v !== 'stavba') setJob(q, 'stavba'); else { setJob(q, null); q.hold = true; } } break; }   // když se staví, odebraný jde rovnou stavět
     case 'build': if (!S.site && canPay(BLD[v].lv[startLv(v)].cost)) { placing = v; selId = null; } break;
     case 'cancel': placing = null; break;
     case 'upgrade': {
@@ -3137,8 +3393,8 @@ function act(a, v) {
     case 'beltEnd': beltMode = false; break;
     case 'road': beltMode = false; roadMode = true; placing = null; selId = null; break;
     case 'roadEnd': roadMode = false; break;
-    case 'buy': if (VAL[v] && S.res.mince >= buyPrice(v) && S.res[v] + 10 <= storeCap()) { S.res.mince -= buyPrice(v); addRes(v, 10); toast('Koupeno 10 ' + RES[v][1].toLowerCase() + ' za ' + buyPrice(v) + ' mincí.'); } break;
-    case 'sell': if (VAL[v] && Math.floor(S.res[v]) - (S.keep[v] || 0) >= 10) { S.res[v] -= 10; S.res.mince += sellPrice(v); toast('Prodáno 10 ' + RES[v][1].toLowerCase() + ' za ' + sellPrice(v) + ' mincí.'); } break;
+    case 'buy': if (VAL[v] && S.res.mince >= buyPrice(v) && S.res[v] + 10 <= storeCap()) { S.res.mince -= buyPrice(v); addRes(v, 10); toast('Koupeno 10 ' + RES[v][1].toLowerCase() + ' za ' + buyPrice(v) + ' mincí.'); } if (modalKind === 'market') showModal('market'); break;
+    case 'sell': if (VAL[v] && Math.floor(S.res[v]) - (S.keep[v] || 0) >= 10) { S.res[v] -= 10; S.res.mince += sellPrice(v); toast('Prodáno 10 ' + RES[v][1].toLowerCase() + ' za ' + sellPrice(v) + ' mincí.'); } if (modalKind === 'market') showModal('market'); break;
     case 'invite': if (S.res.mince >= 30 && S.people.length + 2 <= popCap()) { S.res.mince -= 30; addPerson(); addPerson(); log('Do osady přišli dva noví osadníci.'); } break;
     case 'demolish': {
       const b = bById(selId); if (!b || b.type === 'jeskyne') break;
@@ -3157,6 +3413,7 @@ function act(a, v) {
       break;
     }
     case 'store': showModal('store'); return;
+    case 'market': showModal('market'); return;
     case 'cat': S.cat = v; break;
     case 'perk': { const c = perkCost(); if (S.res.vedeni >= c) { S.res.vedeni -= c; S.perk = (S.perk || 0) + 1; toast('Výroba zdokonalena – úroveň ' + S.perk + ' (+' + S.perk * 10 + ' %).'); } showModal('research'); return; }
     case 'lim+': { const b = bById(selId); if (b) b.limit = Math.min(storeCap(), (b.limit || 0) + 25); break; }
