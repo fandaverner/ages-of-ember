@@ -1328,7 +1328,7 @@ function moveTo(p, tx, ty, sp, dt) {
   const dx = tx - p.x, dy = ty - p.y, d = Math.hypot(dx, dy);
   if (d < 0.12) return true;
   const st = Math.min(d, sp * dt);
-  p.x += dx / d * st; p.y += dy / d * st; p.wd = ((p.wd || 0) + st) % 1000; p.mv = true; p.dir = faceDir(dx, dy);
+  p.x += dx / d * st; p.y += dy / d * st; p.wd = ((p.wd || 0) + st) % 1000; p.mv = true; p.dir = faceDir(dx, dy); p.msx = dx - dy; p.msy = dx + dy;
   return false;
 }
 function nearestNode(p, type) {
@@ -2247,7 +2247,9 @@ function drawPerson(p, T, trader) {
     const bob2 = Math.sin(T * 2 + p.id) * 1.2;
     ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(x, y + 5, 19 + Math.sin(T * 3 + p.id), 4, 0, 0, 7); ctx.fill();
     if (selP.has(p.id)) { ctx.beginPath(); ctx.ellipse(x, y + 4, 20, 6, 0, 0, 7); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke(); }
-    animFrame('rybar_lod', 0, x, y + 7 + bob2, 42, d > 0);
+    // člun leží na obrázku šikmo (vlevo dole – vpravo nahoře); natočí se tak, aby plul po své délce
+    const bflip = p.msx === undefined ? d > 0 : (p.msx >= 0) === (p.msy >= 0);
+    animFrame('rybar_lod', 0, x, y + 7 + bob2, 42, bflip);
     hpBar(p, x, y - 40);
     return;
   }
