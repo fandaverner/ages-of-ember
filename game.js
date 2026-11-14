@@ -3,6 +3,7 @@
 
 const N = 96, TW = 64, TH = 32, OX = N * TW / 2, CX = 48, CY = 48;
 const SAVE_KEY = 'odOhneKeHvezdam_v1';
+const GAME_V = '1.2.3';   // při vydání zvednout (i v index.html) – prohlížeč pak stáhne nové obrázky
 const DAY = 180, NIGHT_FROM = 0.68;
 const T_GRASS = 0, T_DIRT = 1, T_ROCK = 2, T_WATER = 3;
 
@@ -80,7 +81,7 @@ const JOB_BLD = { nastroje: 'dilna', hrncire: 'hrncir', tavici: 'tavirna', kovar
 const JOB_BY_B = {}; for (const j in JOB_BLD) JOB_BY_B[JOB_BLD[j]] = j;
 
 const BLD = {
-  jeskyne: { r: 2, name: 'Jeskyně', names: ['Jeskyně', 'Náčelníkův dlouhý dům', 'Palác', 'Hrad', 'Radnice', 'Mrakodrap'], desc: 'Hlavní budova: domov, sklad a místo, kde se bádá. Její přestavbou postoupíte do dalšího věku.',
+  jeskyne: { r: 2, name: 'Jeskyně', names: ['Jeskyně', 'Náčelníkův dlouhý dům', 'Hrad', 'Radnice', 'Mrakodrap', 'Vesmírné centrum'], desc: 'Hlavní budova: domov, sklad a místo, kde se bádá. Její přestavbou postoupíte do dalšího věku.',
     lv: [{},
          { cost: { klacky: 40, kamen: 30, nastroje: 10, musle: 5, vedeni: 60 }, time: 150, reqs: ['lov', 'chyse', 'malby'], needPop: 12, store: 40, pop: 2, age: 1 },
          { cost: { hlina: 40, keramika: 10, bronz: 10, mince: 30, vedeni: 120 }, time: 240, reqs: ['bronz', 'chov', 'lesnictvi'], needPop: 25, store: 80, pop: 4, age: 2 },
@@ -269,7 +270,7 @@ const TECH = {
   med:        { name: 'Tavení mědi', desc: 'Zelený kámen ve skalách je měděná ruda. Odemkne horníky a tavírnu.', req: ['hrncirstvi'], cost: { keramika: 5, vedeni: 40 }, time: 150 },
   obchod:     { name: 'Obchod a mince', desc: 'Odemkne tržiště. Kupci pak chodí častěji a nabízejí víc.', req: ['hrncirstvi'], cost: { keramika: 8, vedeni: 30 }, time: 120 },
   bronz:      { name: 'Bronz', desc: 'Měď s cínem dá tvrdý bronz. Odemkne kovárnu; bronzové nástroje zrychlí veškerý sběr o čtvrtinu.', req: ['med', 'obchod'], cost: { med: 8, vedeni: 60 }, time: 180 },
-  pismo:      { name: 'Písmo', age: 2, desc: 'Konec starověku: přestavte dlouhý dům na palác s písaři (klikněte na něj).', req: ['bronz', 'chov', 'lesnictvi'], pop: 25,
+  pismo:      { name: 'Písmo', age: 2, desc: 'Konec starověku: přestavte dlouhý dům na hrad (klikněte na něj). Písaři na hradě zapisují úrodu i smlouvy.', req: ['bronz', 'chov', 'lesnictvi'], pop: 25,
     cost: { vedeni: 120, bronz: 10, mince: 30 }, time: 240 },
   /* ---- středověk ---- */
   tesarstvi:  { name: 'Tesařství', desc: 'Pila a prkna, roubenky a velké skladiště.', req: ['pismo'], cost: { klacky: 60, nastroje: 10, vedeni: 60 }, time: 150 },
@@ -299,9 +300,9 @@ const TECH = {
   robotika:  { name: 'Robotika', desc: 'Robotická továrna.', req: ['nano', 'drony'], cost: { kompozity: 20, elektronika: 40, vedeni: 1500 }, time: 360 },
   arkologie: { name: 'Arkologie', desc: 'Přestavba paneláků na arkologie – zelená města pod jednou střechou pro 45 lidí.', req: ['nano'], cost: { kompozity: 30, vedeni: 1200 }, time: 320 },
   vytah:     { name: 'Vesmírný výtah', desc: 'Odemkne stavbu vesmírného výtahu – poslední cíl hry. Vyžaduje aspoň 120 obyvatel.', req: ['robotika', 'arkologie', 'vfarmy'], pop: 120, cost: { vedeni: 3000 }, time: 480 },
-  mrakodrap:   { name: 'Mrakodrap', age: 5, desc: 'Konec moderní doby: přestavte radnici na mrakodrap (klikněte na ni).', req: ['letectvi', 'panelaky'], pop: 100, cost: {}, time: 1 },
-  radnice:     { name: 'Radnice', age: 4, desc: 'Konec průmyslové doby: přestavte hrad na radnici (klikněte na něj).', req: ['stroje', 'cihlove'], pop: 60, cost: {}, time: 1 },
-  hrad:       { name: 'Hrad', age: 3, desc: 'Konec středověku: přestavte palác na hrad (klikněte na něj).', req: ['cechy', 'klaster', 'mlynarstvi'], pop: 40, cost: {}, time: 1 }
+  mrakodrap:   { name: 'Vesmírné centrum', age: 5, desc: 'Konec moderní doby: přestavte mrakodrap na vesmírné centrum (klikněte na něj).', req: ['letectvi', 'panelaky'], pop: 100, cost: {}, time: 1 },
+  radnice:     { name: 'Mrakodrap', age: 4, desc: 'Konec průmyslové doby: přestavte radnici na mrakodrap (klikněte na ni).', req: ['stroje', 'cihlove'], pop: 60, cost: {}, time: 1 },
+  hrad:       { name: 'Radnice', age: 3, desc: 'Konec středověku: přestavte hrad na radnici (klikněte na něj).', req: ['cechy', 'klaster', 'mlynarstvi'], pop: 40, cost: {}, time: 1 }
 };
 const TECH_TREE = [
   ['Pravěk', [['ohen'], ['chyse', 'nastroje', 'rybolov', 'malby'], ['lov', 'pole'], ['usedly']]],
@@ -376,7 +377,7 @@ const OBJ = [
   { t: 'Kupci platí mincemi 🪙. Vyzkoumejte obchod, postavte tržiště a našetřete 20 mincí.', c: () => S.res.mince >= 20 },
   { t: 'Ve skalách je zelený kámen – měděná ruda. Vyzkoumejte tavení mědi, pošlete horníky, postavte tavírnu a vyrobte 10 mědi.', c: () => (S.stats.made.med || 0) >= 10 },
   { t: 'Cín u nás není, kupte ho od kupců. Vyzkoumejte bronz, postavte kovárnu a vyrobte 5 bronzu.', c: () => (S.stats.made.bronz || 0) >= 5 },
-  { t: 'Osada se mění v město. Přestavte chýše na hliněné domy, dosáhněte 25 obyvatel a přestavte dlouhý dům na palác.', c: () => S.age >= 2 },
+  { t: 'Osada se mění v město. Přestavte chýše na hliněné domy, dosáhněte 25 obyvatel a přestavte dlouhý dům na hrad.', c: () => S.age >= 2 },
   { t: 'Začíná středověk! Vyzkoumejte tesařství a postavte pilu – z klacků budou prkna.', c: () => has('pila') },
   { t: 'Přestavte hliněný dům na roubenku (klikněte na něj).', c: () => S.blds.some(b => b.type === 'chyse' && b.lvl >= 5) },
   { t: 'Chléb nasytí nejvíc. Vyzkoumejte mlynářství, postavte mlýn a pekárnu a upečte 30 chlebů 🍞.', c: () => (S.stats.made.chleb || 0) >= 30 },
@@ -384,19 +385,19 @@ const OBJ = [
   { t: 'Vyzkoumejte železo, pošlete horníky na železnou rudu (rezavé skály) a v huti vyrobte 10 železa.', c: () => (S.stats.made.zelezo || 0) >= 10 },
   { t: 'Vyzkoumejte klášter a postavte ho – mniši zapisují vědění.', c: () => has('klaster') },
   { t: 'Vyzkoumejte cechy, přestavte tržiště na velké tržiště a vypravte obchodní povoz do sousedního města.', c: () => S.stats.exped >= 1 },
-  { t: 'Poslední krok středověku: mějte 40 obyvatel a přestavte palác na hrad.', c: () => S.age >= 3 },
+  { t: 'Poslední krok středověku: mějte 40 obyvatel a přestavte hrad na radnici.', c: () => S.age >= 3 },
   { t: 'Začíná průmyslová doba! Vyzkoumejte parní stroj a postavte uhelný důl hned vedle černého ložiska uhlí.', c: () => has('dul_uhli') },
   { t: 'Postavte cihelnu a vypalte 50 cihel 🧱.', c: () => (S.stats.made.cihly || 0) >= 50 },
   { t: 'Vyzkoumejte dopravníky – továrny a doly budou pracovat rychleji.', c: () => !!S.research.done.pasy },
   { t: 'Vyzkoumejte ocel, postavte železný důl a ocelárnu a vyrobte 20 oceli 🔩.', c: () => (S.stats.made.ocel || 0) >= 20 },
   { t: 'Vyzkoumejte strojírenství a vyrobte 10 strojů 🛠️.', c: () => (S.stats.made.stroje || 0) >= 10 },
-  { t: 'Postavte cihlové činžáky, mějte 60 obyvatel a přestavte hrad na radnici.', c: () => S.age >= 4 },
+  { t: 'Postavte cihlové činžáky, mějte 60 obyvatel a přestavte radnici na mrakodrap.', c: () => S.age >= 4 },
   { t: 'Začíná moderní doba! Vyzkoumejte elektřinu a postavte elektrárnu – továrny s proudem pracují o polovinu rychleji.', c: () => has('elektrarna') },
   { t: 'Vyzkoumejte železnici, položte koleje a postavte na nich dvě nádraží. Továrny a doly do 8 políček od nádraží posílají výrobky vlakem a pracují rychleji. Převezte vlakem 30 kusů.', c: () => S.stats.trainCargo >= 30 },
   { t: 'Vyzkoumejte ropu, postavte ropný vrt u ropného ložiska (černá kaluž) a rafinérii a vyrobte 30 plastů 🧴.', c: () => (S.stats.made.plasty || 0) >= 30 },
   { t: 'Vyzkoumejte elektroniku a vyrobte 20 kusů elektroniky 💾.', c: () => (S.stats.made.elektronika || 0) >= 20 },
   { t: 'Vyzkoumejte letectví, postavte letiště a odbavte první let.', c: () => S.stats.flights >= 1 },
-  { t: 'Poslední krok moderní doby: panelové domy, 100 obyvatel a přestavba radnice na mrakodrap.', c: () => S.age >= 5 },
+  { t: 'Poslední krok moderní doby: panelové domy, 100 obyvatel a přestavba mrakodrapu na vesmírné centrum.', c: () => S.age >= 5 },
   { t: 'Začíná budoucnost! Vyzkoumejte fúzi a postavte fúzní reaktor – proud bez uhlí.', c: () => has('fuze_reaktor') },
   { t: 'Vyzkoumejte drony a postavte dronový hangár. Drony zásobí továrny v okolí.', c: () => has('dronport') },
   { t: 'Vyzkoumejte nanomateriály a vyrobte 30 kompozitů 🔷.', c: () => (S.stats.made.kompozity || 0) >= 30 },
@@ -800,7 +801,7 @@ function updWild(dt) {
       w.t0 += dt;
       if (!p || w.t0 > (w.t === 'vlk' ? 9 : 6) || Math.hypot(w.x - w.hx, w.y - w.hy) > 14 || safeAt(p.x, p.y)) { w.st = 'back'; w.cd = 45; continue; }
       const dx = p.x - w.x, dy = p.y - w.y, d = Math.hypot(dx, dy);
-      w.dir = faceDir(dx, dy);
+      w.dir = faceDir(dx, dy); w.msx = dx - dy; w.msy = dx + dy;
       if (d > 0.45) {
         w.st = 'chase';
         const st = Math.min(d, def.sp * 2 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
@@ -821,7 +822,7 @@ function updWild(dt) {
       if (d < 0.3) { w.st = 'idle'; w.t0 = 3; continue; }
       const st = Math.min(d, def.sp * 1.4 * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
       if (wildOk(nx, ny)) { w.x = nx; w.y = ny; } else { w.x = w.hx + 0.5; w.y = w.hy + 0.5; }
-      w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy);
+      w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy); w.msx = dx - dy; w.msy = dx + dy;
       continue;
     }
     // hledá kořist: vlci hlavně v noci, medvěd když ho někdo vyruší u doupěte
@@ -856,7 +857,7 @@ function updWild(dt) {
       if (d < 0.1) { w.st = 'idle'; w.t0 = 2 + Math.random() * 5; continue; }
       const st = Math.min(d, def.sp * dt), nx = w.x + dx / d * st, ny = w.y + dy / d * st;
       if (!wildOk(nx, ny)) { w.st = 'idle'; w.t0 = 1; continue; }
-      w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy);
+      w.x = nx; w.y = ny; w.wd = (w.wd || 0) + st; w.dir = faceDir(dx, dy); w.msx = dx - dy; w.msy = dx + dy;
     }
   }
 }
@@ -871,6 +872,8 @@ function drawWild(w, T) {
   }
   if (w.st === 'attack') ok = animFrame(w.t + '_utok', Math.floor(T * 10 + w.id), x, y + 4, def.h, w.dir < 0);
   else if (w.hurtT && w.t === 'medved') ok = animFrame('medved_zraneni', Math.floor((0.4 - w.hurtT) * 20), x, y + 4, def.h, w.dir < 0);
+  else if ((w.st === 'chase' || w.st === 'back' || w.st === 'walk') && w.msy < 0 && Math.abs(w.msy) > 0.4 * Math.abs(w.msx) && IMG[w.t + '_nahoru'].ok)
+    ok = animFrame(w.t + '_nahoru', Math.floor((w.wd || 0) * (w.st === 'walk' ? 6 : 8)), x, y + 4, w.t === 'vlk' ? 27 : 33, w.msx < 0);
   else if (w.st === 'chase' || w.st === 'back') ok = animFrame(w.t === 'medved' ? 'medved_beh' : 'vlk_chuze', Math.floor((w.wd || 0) * 6), x, y + 4, def.h, w.dir < 0);
   else if (w.st === 'sleep') ok = animFrame(w.t + '_spani', Math.min(7, Math.floor(w.t0 * 3)), x, y + 4, def.h, w.dir < 0);
   else if (w.st === 'walk') ok = animFrame(w.t + '_chuze', Math.floor((w.wd || 0) * (w.t === 'vlk' ? 7 : 6)), x, y + 4, def.h, w.dir < 0);
@@ -915,8 +918,11 @@ function update(dt) {
       if (S.res[nd.r] < 1) miss.push(nd.r);
     }
     if (S.age >= 1) {   // pestrá strava
-      if (S.res.maso < 1 && S.res.ryby < 1) miss.push('maso');
-      if (has('pekarna') ? S.res.chleb < 1 && S.res.bobule < 1 : S.res.obili < 1 && S.res.chleb < 1 && S.res.bobule < 1) miss.push(has('pekarna') ? 'chleb' : 'obili');
+      // chybí jen tehdy, když lidé za poslední chvíli dostali méně než polovinu své porce (ne když se chléb hned sní)
+      const d = S.diet || [[1, 0], [1, 0]], low = k => d[k][1] > d[k][0];
+      if (low(0)) miss.push('maso');
+      if (low(1)) miss.push(has('pekarna') ? 'chleb' : 'obili');
+      S.dietShare = d.map(x => x[0] + x[1] ? x[0] / (x[0] + x[1]) : 1); S.diet = [[0, 0], [0, 0]];
     }
     if (miss.length && S.time - (S.fullT.needs || -99) > 60) { S.fullT.needs = S.time; log('Lidem chybí ' + miss.map(missName).join(', ') + '. Dokud to nebude, osada neporoste.'); }
     S.missing = miss;
@@ -929,11 +935,12 @@ function update(dt) {
   // lidé jedí střídavě z každé skupiny jídla (od starověku maso/ryby a obilí/chléb), v rámci skupiny to, čeho je nejvíc
   const groups = foodGroups(), nut = { chleb: 2.5, maso: S.age || S.fire.lit ? 1.5 : 1, ryby: S.age || S.fire.lit ? 1.5 : 1, obili: 1, bobule: 1 };
   while (S.debt >= 1) {
-    let best = null;
+    let best = null; const want = (S.dietTurn || 0) % groups.length;
     for (let gi = 0; gi < groups.length && !best; gi++) {
-      const g = groups[((S.dietTurn || 0) + gi) % groups.length];
+      const g = groups[(want + gi) % groups.length];
       for (const r of g) if (S.res[r] >= 1 && (!best || S.res[r] > S.res[best])) best = r;
     }
+    if (groups.length > 1) { S.diet = S.diet || [[0, 0], [0, 0]]; S.diet[want][best && groups[want].includes(best) ? 0 : 1]++; }   // [snědeno, nahrazeno]
     if (!best && S.res.obili >= 1) best = 'obili';   // v nouzi sáhnou i na obilí pro mlýn
     if (!best) { S.debt = 1; break; }
     S.dietTurn = ((S.dietTurn || 0) + 1) % groups.length;
@@ -1068,7 +1075,7 @@ function update(dt) {
       }
     }
     for (const n of S.nodes) {
-      if (n.young) { if (++n.rg >= 5) { n.rg = 0; if (++n.amt >= NODE.strom.max) n.young = false; } continue; }
+      if (n.young) { if (++n.rg >= 15) { n.rg = 0; if (++n.amt >= NODE.strom.max) n.young = false; } continue; }   // stromek roste asi 4,5 minuty, teprve dospělý jde pokácet
       const d = NODE[n.t];
       if (d.regrow && n.amt < d.max) { n.rg++; if (n.rg >= d.regrow) { n.rg = 0; n.amt++; } }
     }
@@ -2046,18 +2053,33 @@ const IMG = {};
 ['jeskyne', 'ohniste', 'chyse1', 'chyse2', 'chyse3', 'jama1', 'jama2', 'dilna1', 'dilna2', 'drevo1', 'drevo2', 'lom1', 'lom2', 'lovec1', 'lovec2',
  'ryby1', 'ryby2', 'skala1', 'skala2', 'staveniste', 'strom1', 'strom2', 'strom3', 'ker', 'kamen', 'pazourek', 'zver', 'clun',
  'chyse4', 'hrncir1', 'hrncir2', 'sypka1', 'sypka2', 'skolka1', 'skolka2', 'ohrada1', 'ohrada2', 'smeniste1', 'smeniste2',
- 'tavirna1', 'tavirna2', 'kovarna1', 'hlina', 'ruda', 'osel', 'hliniste1', 'hliniste2', 'straz1', 'straz2', 'rybar_lod', 'vlk_chuze', 'vlk_utok', 'vlk_spani', 'medved_chuze', 'medved_beh', 'medved_utok', 'medved_zraneni', 'medved_smrt', 'medved_spani', 'hlavni2', 'hlavni3', 'clovek_chuze', 'clovek_prace', 'jelen_chuze',
+ 'tavirna1', 'tavirna2', 'kovarna1', 'hlina', 'ruda', 'osel', 'hliniste1', 'hliniste2', 'straz1', 'straz2', 'jeskyne_malby', 'hlavni7', ...['p', 'r', 'z', 'l'].flatMap(k => ['ryby1_' + k, 'ryby2_' + k]), 'rybar_lod', 'rybar_lod_nahoru', 'vlk_nahoru', 'medved_nahoru', 'jelen_nahoru', 'osel_nahoru', 'vuz_nahoru', 'kupec_nahoru', 'pocestny_nahoru', 'vlk_chuze', 'vlk_utok', 'vlk_spani', 'medved_chuze', 'medved_beh', 'medved_utok', 'medved_zraneni', 'medved_smrt', 'medved_spani', 'hlavni2', 'hlavni3', 'clovek_chuze', 'clovek_prace', 'jelen_chuze',
  'hlavni4', 'chyse5', 'dilna3', 'smeniste3', 'pila1', 'pila2', 'sklad1', 'mlyn1', 'pekarna1', 'hut1', 'klaster1', 'zelruda',
  'kupec_chuze', 'pocestny_chuze', 'pole_mlade', 'pole_zrale', 'vuz', 'uhli', 'dul_uhli1', 'dul_zelezo1', 'cihelna1', 'ocelarna1', 'strojirna1', 'chyse6', 'hlavni5', 'ropa', 'elektrarna1', 'ropny_vrt1', 'rafinerie1', 'elektro1', 'nadrazi1', 'letiste1', 'chyse7', 'hlavni6', 'hut2', 'drevo3', 'lom3', 'svatyne1', 'svatyne2', 'svatyne3', 'fuze_reaktor1', 'dronport1', 'nanotovarna1', 'robotovarna1', 'vfarma1', 'vytah1', 'chyse8',
  'kupec3_chuze', 'kupec4_chuze', ...[0, 1, 2, 3, 4, 5].flatMap(a => ['chuze', 'seka', 'kope', 'sklizen', 'remeslo'].map(k => 'clovek' + a + '_' + k))].forEach(n => {
-  const i = new Image(); i.onload = () => { i.ok = true; }; i.onerror = () => { i.bad = true; }; i.src = 'img/s/' + n + '.png'; IMG[n] = i;
+  const i = new Image(); i.onload = () => { i.ok = true; }; i.onerror = () => { i.bad = true; }; i.src = 'img/s/' + n + '.png?v=' + GAME_V; IMG[n] = i;
 });
 // [šířka ve hře, o kolik spodek obrázku přesahuje pod střed dlaždice]
-const SPR_B = { straz1: [76, 19], straz2: [78, 19], hliniste1: [92, 22], hliniste2: [124, 30], jeskyne: [150, 30], ohniste: [46, 12], chyse1: [58, 15], chyse2: [66, 17], chyse3: [72, 19], jama1: [50, 13], jama2: [56, 15],
+// obrázek hlavní budovy pro každou úroveň (palác se přeskočil, hrad patří do středověku)
+const MAIN_LV = [0, 1, 2, 4, 5, 6, 6];
+function mainSpr(b) {
+  if (b.lvl === 1) return S.research.done.malby && IMG.jeskyne_malby.ok ? 'jeskyne_malby' : 'jeskyne';
+  if (b.lvl === 6) return IMG.hlavni7.ok ? 'hlavni7' : 'hlavni6';
+  return 'hlavni' + MAIN_LV[b.lvl];
+}
+// rybářská chata a loděnice: molo vždy směrem k vodě
+const FISH_DIR = { '1,0': 'p', '0,1': 'l', '-1,0': 'z', '0,-1': 'r' };   // voda vpravo dole → molo dopředu, vlevo dole → doleva…
+function fishSpr(b) {
+  if (!b.wdir) { const w = waterNear(b); b.wdir = w ? w.dx + ',' + w.dy : '0,1'; }
+  const k = 'ryby' + b.lvl + '_' + (FISH_DIR[b.wdir] || 'p');
+  return IMG[k] && IMG[k].ok ? k : 'ryby' + b.lvl;
+}
+const SPR_B = { jeskyne_malby: [150, 30], hlavni7: [175, 35],
+  ryby1_p: [86, 21], ryby1_r: [86, 21], ryby1_z: [86, 21], ryby1_l: [86, 21], ryby2_p: [102, 25], ryby2_r: [102, 25], ryby2_z: [102, 25], ryby2_l: [102, 25], straz1: [76, 19], straz2: [78, 19], hliniste1: [92, 22], hliniste2: [124, 30], jeskyne: [150, 30], ohniste: [46, 12], chyse1: [58, 15], chyse2: [66, 17], chyse3: [72, 19], jama1: [50, 13], jama2: [56, 15],
   dilna1: [70, 18], dilna2: [76, 20], drevo1: [74, 19], drevo2: [80, 20], lom1: [78, 20], lom2: [82, 21], lovec1: [72, 18], lovec2: [80, 20],
   ryby1: [72, 18], ryby2: [86, 22], skala1: [52, 13], skala2: [60, 15],
   chyse4: [74, 19], hrncir1: [84, 21], hrncir2: [94, 23], sypka1: [56, 15], sypka2: [80, 20], skolka1: [84, 21], skolka2: [92, 23],
-  ohrada1: [80, 20], ohrada2: [92, 23], smeniste1: [88, 20], smeniste2: [100, 22], tavirna1: [80, 20], tavirna2: [90, 22], kovarna1: [86, 21],
+  ohrada1: [86, 21], ohrada2: [110, 26], smeniste1: [88, 20], smeniste2: [100, 22], tavirna1: [80, 20], tavirna2: [90, 22], kovarna1: [86, 21],
   hlavni2: [150, 30], hlavni3: [165, 33], hlavni4: [180, 36], chyse5: [76, 19], dilna3: [82, 20], smeniste3: [104, 23],
   pila1: [84, 21], pila2: [92, 22], sklad1: [92, 23], mlyn1: [76, 18], pekarna1: [78, 19], hut1: [86, 21], klaster1: [110, 26],
   dul_uhli1: [84, 21], dul_zelezo1: [84, 21], cihelna1: [90, 22], ocelarna1: [104, 25], strojirna1: [104, 25], chyse6: [80, 20], hlavni5: [185, 37],
@@ -2186,7 +2208,9 @@ function drawNode(n, T) {
       const tt = T * 0.5 + i * 2.1 + h * 6, a = 2 * (tt + 0.8 * Math.sin(tt)), R = 14, ph = a + Math.PI / 2;
       const X = x + Math.cos(a) * R + (i - 1) * 10, Y = y + Math.sin(a) * R * 0.5 + (i % 2) * 4;
       shadow(X, Y + 1, 8);
-      if (!animFrame('jelen_chuze', Math.floor(a * R * 0.8 / 3), X, Y + 2, 27, Math.sin(a) > 0)) spr('zver', X, Y, 24, 2, Math.sin(a) < 0);
+      const up = Math.cos(a) < -0.35 && IMG.jelen_nahoru.ok;   // běží od nás – pohled zezadu
+      if (up) animFrame('jelen_nahoru', Math.floor(a * R * 0.8 / 3), X, Y + 2, 30, Math.sin(a) > 0);
+      else if (!animFrame('jelen_chuze', Math.floor(a * R * 0.8 / 3), X, Y + 2, 27, Math.sin(a) > 0)) spr('zver', X, Y, 24, 2, Math.sin(a) < 0);
     }
     return;
   }
@@ -2233,8 +2257,19 @@ function drawNode(n, T) {
     }
   }
 }
+function drawTraderUp(p, T) {
+  const [x, y] = iso(p.x, p.y), sg = p.msx >= 0 ? 1 : -1, fl = p.msx < 0, f = Math.floor((p.wd || 0) / 0.085);
+  const sheet = S.age ? 'kupec_nahoru' : 'pocestny_nahoru';
+  if (!IMG[sheet].ok) return false;
+  shadow(x, y, 6.5);
+  animFrame(sheet, f, x, y + 1, 33, fl);
+  if (S.age) { shadow(x - sg * 11, y + 14, 10); animFrame('osel_nahoru', f, x - sg * 11, y + 16, 31, fl); }
+  if (S.age >= 2 && S.research.done.cesty) { shadow(x - sg * 30, y + 42, 13); animFrame('vuz_nahoru', Math.floor(f / 2), x - sg * 30, y + 45, 36, fl); }
+  return true;
+}
 function drawPerson(p, T, trader) {
   const [x, y] = iso(p.x, p.y), d = p.dir || 1;
+  if (trader && S.age < 4 && p.mv && p.msy < 0 && Math.abs(p.msy) > 0.4 * Math.abs(p.msx) && drawTraderUp(p, T)) return;
   if (trader && S.age >= 4) drawTruck(x - d * 22, y - 2, d);
   else {
     if (trader && S.age >= 2 && S.research.done.cesty) drawCart(x - d * 32, y - 2, d);
@@ -2248,8 +2283,8 @@ function drawPerson(p, T, trader) {
     ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.ellipse(x, y + 5, 19 + Math.sin(T * 3 + p.id), 4, 0, 0, 7); ctx.fill();
     if (selP.has(p.id)) { ctx.beginPath(); ctx.ellipse(x, y + 4, 20, 6, 0, 0, 7); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.stroke(); }
     // člun leží na obrázku šikmo (vlevo dole – vpravo nahoře); natočí se tak, aby plul po své délce
-    const bflip = p.msx === undefined ? d > 0 : (p.msx >= 0) === (p.msy >= 0);
-    animFrame('rybar_lod', 0, x, y + 7 + bob2, 42, bflip);
+    if (p.msy < 0 && IMG.rybar_lod_nahoru.ok) animFrame('rybar_lod_nahoru', 0, x, y + 7 + bob2, 42, p.msx < 0);   // pluje od nás: pohled zezadu
+    else animFrame('rybar_lod', 0, x, y + 7 + bob2, 42, p.msx === undefined ? d > 0 : p.msx >= 0);
     hpBar(p, x, y - 40);
     return;
   }
@@ -2324,7 +2359,7 @@ function drawPerson(p, T, trader) {
 }
 function drawBld(b, T) {
   const [x, y] = iso(b.x + 0.5, b.y + 0.5);
-  const key = b.type === 'jeskyne' && b.lvl > 1 ? 'hlavni' + b.lvl : SPR_B[b.type] ? b.type : b.type + b.lvl, sc = SPR_B[key];
+  const key = b.type === 'jeskyne' ? mainSpr(b) : b.type === 'ryby' ? fishSpr(b) : SPR_B[b.type] ? b.type : b.type + b.lvl, sc = SPR_B[key];
   if (sc && IMG[key] && IMG[key].ok) {
     if (b.id === selId) diamond(b.x, b.y, 'rgba(255,230,120,.9)', 'rgba(255,230,120,.25)');
     if (b.type !== 'jama' && b.type !== 'ohniste') shadow(x, y + 4, sc[0] * 0.36);
@@ -2471,7 +2506,7 @@ function roof(cx, cy, hw, rh, cl, cr) {
 }
 function pot(px, py, s, c) { ell(px, py, 3.2 * s, 4 * s, c || '#b5683a'); ell(px, py - 3.6 * s, 2 * s, 0.9 * s, '#5a2e14'); }
 function drawBld2(b, T, x, y) {
-  const t = b.type, lv = b.lvl;
+  const t = b.type, lv = t === 'jeskyne' ? MAIN_LV[b.lvl] : b.lvl;
   if (t === 'pole' && IMG.pole_mlade && IMG.pole_mlade.ok) {
     const l = lvOf(b), gr = Math.min(1, (b.t || 0) / (l.farm ? l.farm.t : 45));
     if (b.id === selId) diamond(b.x, b.y, 'rgba(255,230,120,.9)', null);
@@ -3074,7 +3109,7 @@ function renderUI() {
   // jen suroviny důležité pro tento věk; všechno jídlo jako jedno číslo; zbytek v přehledu skladu
   const FOOD = ['chleb', 'maso', 'ryby', 'obili', 'bobule'];
   const fsum = FOOD.reduce((a, r) => a + Math.floor(S.res[r]), 0);
-  h += `<span class="r" title="Jídlo celkem: ${FOOD.filter(r => S.res[r] >= 1).map(r => RES[r][1].toLowerCase() + ' ' + Math.floor(S.res[r])).join(', ') || 'nic'}">🍽 ${fsum}</span>`;
+  h += `<span class="r" title="Jídlo celkem: ${FOOD.filter(r => S.res[r] >= 1).map(r => RES[r][1].toLowerCase() + ' ' + Math.floor(S.res[r])).join(', ') || 'nic'}${S.dietShare && S.age >= 1 ? ` – lidé dostávají ${Math.round(S.dietShare[0] * 100)} % porce masa/ryb a ${Math.round(S.dietShare[1] * 100)} % porce ${has('pekarna') ? 'chleba' : 'obilí'}` : ''}">🍽 ${fsum}${S.dietShare && S.age >= 1 && Math.min(...S.dietShare) < 0.9 ? ` <small style="color:#ffcf7a">(${has('pekarna') ? '🍞' : '🌾'} ${Math.round(S.dietShare[1] * 100)} %)</small>` : ''}</span>`;
   for (const r of TOPRES[Math.min(S.age, 5)]) {
     const v = Math.floor(S.res[r]); if (r === 'musle' && !v) continue;
     const full = !UNCAPPED[r] && v >= cap;
@@ -3292,19 +3327,19 @@ function showModal(kind) {
       <p>Jeskyně se proměnila v <b>náčelníkův dlouhý dům</b> – pojme víc lidí i zásob.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat</button></div>`;
   } else if (kind === 'win2') {
-    h = `<h3>Začíná středověk</h3><p>Písaři v paláci zapisují úrodu, dluhy i smlouvy s kupci. Z osady u jeskyně je město s tržištěm a kovárnou.</p>
+    h = `<h3>Začíná středověk</h3><p>Nad osadou se tyčí hrad. Písaři na hradě zapisují úrodu, dluhy i smlouvy s kupci. Z osady u jeskyně je město s tržištěm a kovárnou.</p>
       <p><b>Co je nového:</b> pila a prkna, roubenky a skladiště, větrný mlýn a pekárna (chléb), dlážděné cesty, trakaře, železo, klášter a obchodní povozy do sousedních měst. Nové výzkumy najdete ve stromu technologií.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat</button></div>`;
   } else if (kind === 'win3') {
-    h = `<h3>Začíná průmyslová doba</h3><p>Nad městem se tyčí hrad, ale doba se mění: přichází parní stroj, uhlí a továrny.</p>
+    h = `<h3>Začíná průmyslová doba</h3><p>Hrad vystřídala radnice na náměstí – o městě teď rozhodují měšťané. Přichází parní stroj, uhlí a továrny.</p>
       <p><b>Co je nového:</b> velká ložiska uhlí a doly, které těží samy, cihelna, ocelárna a strojírna, dopravníky, které továrny zrychlí, cihlové činžáky a topení uhlím. Nové výzkumy najdete ve stromu technologií.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat</button></div>`;
   } else if (kind === 'win4') {
-    h = `<h3>Začíná moderní doba</h3><p>Na náměstí stojí radnice a do města přichází elektřina.</p>
+    h = `<h3>Začíná moderní doba</h3><p>Místo radnice se nad městem tyčí mrakodrap a do města přichází elektřina.</p>
       <p><b>Co je nového:</b> elektrárna (továrny s proudem pracují o polovinu rychleji), železnice s vlaky mezi nádražími, ropa a plasty, elektronika, panelové domy a letiště s leteckým obchodem.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat</button></div>`;
   } else if (kind === 'win5') {
-    h = `<h3>Začíná budoucnost</h3><p>Nad městem se tyčí mrakodrap, mezi nádražími jezdí vlaky a z letiště startují letadla do celého světa. Teď přichází poslední věk.</p>
+    h = `<h3>Začíná budoucnost</h3><p>Ve středu města stojí vesmírné centrum, mezi nádražími jezdí vlaky a z letiště startují letadla do celého světa. Teď přichází poslední věk.</p>
       <p><b>Co je nového:</b> fúzní reaktor, drony zásobující továrny, kompozity a roboti, vertikální farmy, arkologie – a nakonec vesmírný výtah, cesta ke hvězdám.</p>
       <div style="text-align:right"><button data-a="close">Pokračovat</button></div>`;
   } else if (kind === 'final') {
@@ -3782,7 +3817,7 @@ function command(sx, sy) {
     if (!NODE_JOB[o.t]) { toast('Tohle se těží jen stavbou (' + (o.t === 'ropa' ? 'ropný vrt' : 'důl') + ').'); renderUI(); return; }
     const j = NODE_JOB[o.t]; let n = 0;
     if (jobLocked(j)) { toast(JOBS[j].mineBy && (JOBS[j].until !== undefined && S.age >= JOBS[j].until) ? 'Tohle se těží jen stavbou: ' + JOBS[j].mineBy + '.' : 'Nejdřív vyzkoumejte: ' + TECH[JOBS[j].req].name + '.'); renderUI(); return; }
-    if (o.young) { toast('Stromek ještě roste.'); renderUI(); return; }
+    if (o.young) { toast('Stromek ještě roste (' + Math.round(o.amt / NODE.strom.max * 100) + ' %). Pokácet půjde, až dospěje.'); renderUI(); return; }
     for (const p of ppl) {
       if (p.job !== j && S.people.filter(q => q.job === j).length >= jobMax(j)) continue;
       setJob(p, j); p.nid = o.id; p.st = 'go'; n++;
